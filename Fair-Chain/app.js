@@ -150,11 +150,11 @@ window.loadBuyerView = async function () {
     const buyerResults = document.getElementById("buyerResults");
     buyerResults.innerHTML = "";
 
-    // 🔹 Replace with public account keys of known factories
+    // 🔹 we can replace with public account keys of known factories
     const factoryPublicKeys = [
       "GXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", // Factory 1
       "GYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY", // Factory 2
-      // Add more known factories here
+      // We can add more known factories here
     ];
 
     for (let pubKey of factoryPublicKeys) {
