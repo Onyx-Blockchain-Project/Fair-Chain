@@ -1,0 +1,107 @@
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: #f0f2f5;
+  color: #2f3640;
+  padding: 20px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+header h1 {
+  color: #273c75;
+  font-size: 2.2em;
+  margin-bottom: 5px;
+}
+
+header p {
+  color: #718093;
+}
+
+/* Cards */
+.card {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+.card h2 {
+  color: #192a56;
+  margin-bottom: 15px;
+}
+
+/* Inputs */
+input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  border: 1px solid #dcdde1;
+  font-size: 16px;
+}
+
+/* Buttons */
+button {
+  padding: 12px 20px;
+  background-color: #44bd32;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: 0.3s;
+}
+
+button:hover {
+  background-color: #4cd137;
+}
+
+/* Status message */
+#status {
+  margin-top: 12px;
+  font-weight: bold;
+}
+
+/* Results and History cards container */
+.cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 15px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* Each verification/history item as card */
+.cards-container li {
+  flex: 1 1 200px;
+  background-color: #f5f6fa;
+  padding: 15px;
+  border-radius: 10px;
+  border-left: 6px solid #44bd32;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  list-style: none;
+  white-space: pre-line;
+}
+
+/* Badge styling for reputation counts */
+.badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 12px;
+  background-color: #44bd32;
+  color: white;
+  font-size: 0.9em;
+  margin-right: 5px;
+}

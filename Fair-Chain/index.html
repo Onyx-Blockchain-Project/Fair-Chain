@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>FairChain Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <h1>FairChain Dashboard</h1>
+    <p>Decentralized Verification for Ethiopian SMEs</p>
+  </header>
+
+  <main>
+    <!-- Auditor Login -->
+    <section class="card">
+      <h2>Auditor Login</h2>
+      <input id="secretKey" placeholder="Auditor Secret Key" />
+    </section>
+
+    <!-- Submit Verification -->
+    <section class="card">
+      <h2>Submit Verification</h2>
+      <input id="factory" placeholder="Factory Name" />
+      <input id="auditor" placeholder="Auditor Name" />
+      <button onclick="submitVerification()">Verify Factory</button>
+      <p id="status"></p>
+    </section>
+
+    <!-- Search Factory -->
+    <section class="card">
+      <h2>Check Factory Records</h2>
+      <input id="searchFactory" placeholder="Factory Name" />
+      <button onclick="loadVerifications()">Search</button>
+      <ul id="results" class="cards-container"></ul>
+    </section>
+
+    <!-- Full History -->
+    <section class="card">
+      <h2>Full Verification History</h2>
+      <button onclick="loadHistory()">Load History</button>
+      <ul id="history" class="cards-container"></ul>
+    </section>
+    
+    <section class="card">
+  <h2>Buyer View – Public Factory Reputation</h2>
+  <input id="buyerSearchFactory" placeholder="Factory Name" />
+  <button onclick="loadBuyerView()">Search</button>
+  <ul id="buyerResults" class="cards-container"></ul>
+</section>
+  </main>
+
+  <!-- Stellar SDK -->
+  <script src="node_modules/stellar-sdk/dist/stellar-sdk.min.js"></script>
+  
+  <script src="app.js"></script>
+</body>
+</html>
