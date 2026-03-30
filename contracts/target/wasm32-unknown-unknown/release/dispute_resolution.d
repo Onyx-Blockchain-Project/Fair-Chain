@@ -1,0 +1,1 @@
+C:\Users\DELL\OneDrive\Documents\Fair-Chain\contracts\target\wasm32-unknown-unknown\release\dispute_resolution.wasm: C:\Users\DELL\OneDrive\Documents\Fair-Chain\contracts\dispute_resolution\src\lib.rs

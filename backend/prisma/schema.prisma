@@ -1,0 +1,185 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Factory {
+  id              String    @id @default(uuid())
+  walletAddress   String    @unique @map("wallet_address")
+  name            String
+  location        String
+  productType     String    @map("product_type")
+  employeeCount   Int       @map("employee_count")
+  certifications  String[]
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  audits          Audit[]
+  reputation      Reputation?
+
+  @@map("factories")
+}
+
+model Auditor {
+  id              String    @id @default(uuid())
+  walletAddress   String    @unique @map("wallet_address")
+  name            String?
+  email           String?
+  stakedAmount    BigInt    @default(0) @map("staked_amount")
+  reputationScore Int       @default(50) @map("reputation_score")
+  auditsCompleted Int       @default(0) @map("audits_completed")
+  isActive        Boolean   @default(true) @map("is_active")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  audits          Audit[]
+
+  @@map("auditors")
+}
+
+model Audit {
+  id                  String    @id @default(uuid())
+  auditIdOnChain      BigInt?   @map("audit_id_on_chain")
+  auditorAddress      String    @map("auditor_address")
+  factoryAddress      String    @map("factory_address")
+  
+  // Compliance Scores (0-100)
+  laborScore          Int       @map("labor_score")
+  environmentalScore  Int       @map("environmental_score")
+  qualityScore        Int       @map("quality_score")
+  safetyScore         Int       @map("safety_score")
+  overallScore        Float     @map("overall_score")
+  
+  // Evidence
+  ipfsHash            String?   @map("ipfs_hash")
+  evidenceUrls        String[]  @map("evidence_urls")
+  notes               String?
+  
+  // Categories audited
+  categories          String[]
+  
+  // Status
+  status              AuditStatus @default(PENDING)
+  submittedAt         DateTime  @default(now()) @map("submitted_at")
+  verifiedAt          DateTime? @map("verified_at")
+
+  // Relations
+  auditor             Auditor   @relation(fields: [auditorAddress], references: [walletAddress])
+  factory             Factory   @relation(fields: [factoryAddress], references: [walletAddress])
+
+  @@map("audits")
+}
+
+model Reputation {
+  id                      String   @id @default(uuid())
+  factoryAddress          String   @unique @map("factory_address")
+  
+  // Algorithm Components
+  totalScore              Float    @map("total_score")
+  auditorReputationComponent  Float @map("auditor_reputation_component")
+  evidenceDepthComponent  Float    @map("evidence_depth_component")
+  recencyComponent        Float    @map("recency_component")
+  categoryCoverageComponent Float  @map("category_coverage_component")
+  
+  // Metadata
+  auditCount              Int      @map("audit_count")
+  lastAuditTimestamp      DateTime? @map("last_audit_timestamp")
+  calculatedAt            DateTime @default(now()) @map("calculated_at")
+  
+  // Relations
+  factory                 Factory  @relation(fields: [factoryAddress], references: [walletAddress])
+
+  @@map("reputations")
+}
+
+model Dispute {
+  id              String        @id @default(uuid())
+  disputeIdOnChain BigInt?      @map("dispute_id_on_chain")
+  plaintiff       String        // Address of who filed
+  defendant       String        // Address being disputed
+  auditId         String        @map("audit_id")
+  reason          String
+  bond            BigInt        // XLM amount staked
+  status          DisputeStatus @default(OPEN)
+  createdAt       DateTime      @default(now()) @map("created_at")
+  resolvedAt      DateTime?     @map("resolved_at")
+  decision        DisputeDecision?
+
+  @@map("disputes")
+}
+
+model TradeFinance {
+  id              String            @id @default(uuid())
+  financeIdOnChain BigInt?          @map("finance_id_on_chain")
+  factoryAddress  String            @map("factory_address")
+  lenderAddress   String            @map("lender_address")
+  buyerAddress    String            @map("buyer_address")
+  amount          BigInt            // In stroops (1 XLM = 10M stroops)
+  invoiceHash     String            @map("invoice_hash")
+  status          FinanceStatus     @default(PENDING)
+  requestedAt     DateTime          @default(now()) @map("requested_at")
+  approvedAt      DateTime?         @map("approved_at")
+  releasedAt      DateTime?         @map("released_at")
+
+  @@map("trade_finance")
+}
+
+model SDGImpact {
+  id                      String   @id @default(uuid())
+  
+  // Economic Metrics
+  factoriesRegistered     Int      @default(0) @map("factories_registered")
+  auditsCompleted         Int      @default(0) @map("audits_completed")
+  tradeFinanceUnlocked    BigInt   @default(0) @map("trade_finance_unlocked")
+  jobsSupported           Int      @default(0) @map("jobs_supported")
+  smeRevenueGrowth        Float    @default(0) @map("sme_revenue_growth")
+  
+  // Social Metrics
+  wageComplianceRate      Float    @default(0) @map("wage_compliance_rate")
+  safetyIncidentsReduced  Float    @default(0) @map("safety_incidents_reduced")
+  femaleLedPercent        Float    @default(0) @map("female_led_percent")
+  
+  // Environmental Metrics
+  co2ReductionTons        Float    @default(0) @map("co2_reduction_tons")
+  wasteReductionPercent   Float    @default(0) @map("waste_reduction_percent")
+  sustainableFactories    Int      @default(0) @map("sustainable_factories")
+  
+  // Monthly tracking
+  month                   String
+  year                    Int
+  recordedAt              DateTime @default(now()) @map("recorded_at")
+
+  @@unique([month, year])
+  @@map("sdg_impact")
+}
+
+// Enums
+enum AuditStatus {
+  PENDING
+  VERIFIED
+  DISPUTED
+  REJECTED
+}
+
+enum DisputeStatus {
+  OPEN
+  VOTING
+  RESOLVED
+}
+
+enum DisputeDecision {
+  PLAINTIFF_WIN
+  DEFENDANT_WIN
+}
+
+enum FinanceStatus {
+  PENDING
+  APPROVED
+  RELEASED
+  REJECTED
+}
