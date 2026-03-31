@@ -1,5 +1,5 @@
-import React from 'react';
-import { Wallet, LogOut, CheckCircle, Loader2, AlertCircle, ExternalLink } from 'lucide-react';
+import React, { useState } from 'react';
+import { Wallet, LogOut, CheckCircle, Loader2, AlertCircle, ExternalLink, Key } from 'lucide-react';
 
 export function WalletConnect({ 
   publicKey, 
@@ -7,9 +7,13 @@ export function WalletConnect({
   isConnecting,
   error,
   freighterAvailable,
+  manualMode,
   onConnect, 
-  onDisconnect 
+  onDisconnect,
+  onConnectManual 
 }) {
+  const [showManualInput, setShowManualInput] = useState(false);
+  const [manualAddress, setManualAddress] = useState('');
   const truncateAddress = (address) => {
     if (!address) return '';
     return `${address.slice(0, 6)}...${address.slice(-4)}`;

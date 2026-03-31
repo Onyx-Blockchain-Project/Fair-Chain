@@ -50,6 +50,20 @@ export function useStellarWallet() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState(null);
   const [freighterAvailable, setFreighterAvailable] = useState(false);
+  const [manualMode, setManualMode] = useState(false);
+
+  // Manual wallet address input for testing
+  const connectManual = useCallback((address) => {
+    if (address && address.startsWith('G') && address.length === 56) {
+      setPublicKey(address);
+      setIsConnected(true);
+      setManualMode(true);
+      setError(null);
+      console.log('✅ Manual wallet connected:', address);
+    } else {
+      setError('Invalid Stellar address format');
+    }
+  }, []);
 
   // Check if Freighter is available in browser
   useEffect(() => {
@@ -169,6 +183,7 @@ export function useStellarWallet() {
   const disconnect = useCallback(() => {
     setPublicKey(null);
     setIsConnected(false);
+    setManualMode(false);
     setError(null);
     // Note: Freighter doesn't have a disconnect method, user must disconnect from extension
   }, []);
@@ -179,8 +194,10 @@ export function useStellarWallet() {
     isConnecting,
     error,
     freighterAvailable,
+    manualMode,
     connect,
-    disconnect
+    disconnect,
+    connectManual
   };
 }
 

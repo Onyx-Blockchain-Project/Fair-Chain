@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Freighter Complete Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .section { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; font-weight: bold; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        button { padding: 10px 20px; margin: 10px 5px; cursor: pointer; border: none; border-radius: 4px; background: #007bff; color: white; }
+        button:hover { background: #0056b3; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Complete Freighter Debug Tool</h1>
+    
+    <div class="section">
+        <h2>📊 Extension Detection</h2>
+        <div id="detection-status" class="info">Checking...</div>
+        <div id="detection-results"></div>
+        <button onclick="runDetection()">Run Detection Again</button>
+    </div>
+    
+    <div class="section">
+        <h2>🪟 Window Object Analysis</h2>
+        <div id="window-analysis"></div>
+        <button onclick="analyzeWindow()">Analyze Window Object</button>
+    </div>
+    
+    <div class="section">
+        <h2>🔗 Connection Test</h2>
+        <div id="connection-status"></div>
+        <button onclick="testConnection()">Test Connection</button>
+        <button onclick="getPublicKey()">Get Public Key</button>
+    </div>
+    
+    <div class="section">
+        <h2>⚙️ Browser Info</h2>
+        <div id="browser-info"></div>
+        <button onclick="showBrowserInfo()">Show Browser Info</button>
+    </div>
+    
+    <div class="section">
+        <h2>🛠️ Manual Fixes</h2>
+        <div class="grid">
+            <div>
+                <h3>Extension Fixes</h3>
+                <ol>
+                    <li>Click the puzzle icon 🧩 in toolbar</li>
+                    <li>Find "Freighter" in the list</li>
+                    <li>Make sure the toggle is ON (blue)</li>
+                    <li>Click the pin icon 📌 to show it in toolbar</li>
+                    <li>Refresh this page (F5)</li>
+                </ol>
+            </div>
+            <div>
+                <h3>Browser Fixes</h3>
+                <ol>
+                    <li>Try a different browser (Chrome/Firefox)</li>
+                    <li>Disable other wallet extensions temporarily</li>
+                    <li>Clear browser cache</li>
+                    <li>Try incognito mode</li>
+                    <li>Restart browser completely</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let detectionInterval;
+        
+        function runDetection() {
+            const results = document.getElementById('detection-results');
+            const status = document.getElementById('detection-status');
+            
+            const checks = {
+                'window.freighterApi': !!window.freighterApi,
+                'window.freighter': !!window.freighter,
+                'window.stellar': !!window.stellar,
+                'window.albedo': !!window.albedo,
+                'document.freighter': !!document.freighter,
+                'window.freighterApi?.getPublicKey': !!(window.freighterApi?.getPublicKey),
+                'window.freighter?.getPublicKey': !!(window.freighter?.getPublicKey),
+                'window.stellar?.getPublicKey': !!(window.stellar?.getPublicKey),
+            };
+            
+            let html = '';
+            for (const [key, value] of Object.entries(checks)) {
+                html += `<div class="${value ? 'success' : 'error'}">${key}: ${value ? '✅ Found' : '❌ Not found'}</div>`;
+            }
+            
+            results.innerHTML = html;
+            
+            const hasFreighter = Object.values(checks).some(v => v);
+            if (hasFreighter) {
+                status.className = 'success';
+                status.textContent = '✅ Freighter API detected!';
+            } else {
+                status.className = 'error';
+                status.innerHTML = '❌ Freighter API not detected. <br><strong>Solution:</strong> Check your browser extensions and make sure Freighter is enabled.';
+            }
+        }
+        
+        function analyzeWindow() {
+            const analysis = document.getElementById('window-analysis');
+            
+            // Look for any wallet-related properties
+            const walletProps = [];
+            for (let key in window) {
+                if (key.toLowerCase().includes('freight') || 
+                    key.toLowerCase().includes('stellar') || 
+                    key.toLowerCase().includes('wallet') ||
+                    key.toLowerCase().includes('albedo')) {
+                    walletProps.push(key);
+                }
+            }
+            
+            let html = '<h3>Wallet-related window properties:</h3>';
+            if (walletProps.length > 0) {
+                html += '<ul>';
+                walletProps.forEach(prop => {
+                    html += `<li><code>${prop}</code>: ${typeof window[prop]} - ${!!window[prop] ? 'exists' : 'undefined'}</li>`;
+                });
+                html += '</ul>';
+            } else {
+                html += '<p class="error">No wallet-related properties found in window object</p>';
+            }
+            
+            // Check if extension is blocked
+            html += '<h3>Extension blocking check:</h3>';
+            if (window.chrome?.runtime) {
+                html += '<p class="success">Chrome extension APIs available</p>';
+            } else {
+                html += '<p class="warning">Chrome extension APIs not available (might be in different browser or restricted mode)</p>';
+            }
+            
+            analysis.innerHTML = html;
+        }
+        
+        async function testConnection() {
+            const status = document.getElementById('connection-status');
+            
+            try {
+                const api = window.freighterApi || window.freighter || window.stellar;
+                if (!api) throw new Error('No API found');
+                
+                status.innerHTML = '<div class="info">Testing connection...</div>';
+                
+                if (api.isConnected) {
+                    const connected = await api.isConnected();
+                    status.innerHTML = `<div class="${connected ? 'success' : 'warning'}">Connected: ${connected}</div>`;
+                } else {
+                    status.innerHTML = '<div class="warning">isConnected method not available</div>';
+                }
+            } catch (error) {
+                status.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+        
+        async function getPublicKey() {
+            const status = document.getElementById('connection-status');
+            
+            try {
+                const api = window.freighterApi || window.freighter || window.stellar;
+                if (!api) throw new Error('No API found');
+                
+                status.innerHTML = '<div class="info">Requesting public key...</div>';
+                
+                if (api.getPublicKey) {
+                    const key = await api.getPublicKey();
+                    status.innerHTML = `<div class="success">Public Key: <code>${key}</code></div>`;
+                } else {
+                    status.innerHTML = '<div class="error">getPublicKey method not available</div>';
+                }
+            } catch (error) {
+                status.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+        
+        function showBrowserInfo() {
+            const info = document.getElementById('browser-info');
+            
+            const browserData = {
+                'User Agent': navigator.userAgent,
+                'Platform': navigator.platform,
+                'Language': navigator.language,
+                'Cookies Enabled': navigator.cookieEnabled,
+                'On-line': navigator.onLine,
+                'Window Location': window.location.href,
+                'Document Ready State': document.readyState
+            };
+            
+            let html = '<table style="width: 100%; border-collapse: collapse;">';
+            for (const [key, value] of Object.entries(browserData)) {
+                html += `<tr style="border: 1px solid #ddd;"><td style="padding: 8px; font-weight: bold;">${key}</td><td style="padding: 8px;">${value}</td></tr>`;
+            }
+            html += '</table>';
+            
+            info.innerHTML = html;
+        }
+        
+        // Auto-detect on page load
+        runDetection();
+        analyzeWindow();
+        showBrowserInfo();
+        
+        // Keep checking for a while
+        let attempts = 0;
+        detectionInterval = setInterval(() => {
+            attempts++;
+            runDetection();
+            if (attempts > 10) {
+                clearInterval(detectionInterval);
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
