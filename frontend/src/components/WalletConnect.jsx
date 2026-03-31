@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Wallet, LogOut, CheckCircle, Loader2 } from 'lucide-react';
 
 export function WalletConnect({ 
@@ -10,18 +10,8 @@ export function WalletConnect({
   manualMode,
   detectionComplete,
   onConnect, 
-  onDisconnect,
-  onConnectManual 
+  onDisconnect
 }) {
-  const [showWalletOptions, setShowWalletOptions] = useState(false);
-
-  // Auto-show wallet options when Freighter not available
-  useEffect(() => {
-    if (detectionComplete && !freighterAvailable && !isConnected) {
-      setShowWalletOptions(true);
-    }
-  }, [detectionComplete, freighterAvailable, isConnected]);
-
   const truncateAddress = (address) => {
     if (!address) return '';
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -45,40 +35,9 @@ export function WalletConnect({
     );
   }
 
-  if (showWalletOptions) {
-    return (
-      <div className="bg-white p-6 rounded-lg shadow-lg border border-gray-200 max-w-md">
-        <h3 className="text-lg font-semibold mb-4">Connect Your Wallet</h3>
-        
-        <div className="space-y-3">
-          <button
-            onClick={() => window.open('https://www.freighter.app', '_blank')}
-            className="w-full flex items-center gap-3 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-          >
-            <Wallet size={20} />
-            Create/Install Freighter Wallet
-          </button>
-        </div>
-        
-        <button
-          onClick={() => setShowWalletOptions(false)}
-          className="mt-4 text-sm text-gray-600 hover:text-gray-800"
-        >
-          Cancel
-        </button>
-      </div>
-    );
-  }
-
   return (
     <button
-      onClick={() => {
-        if (freighterAvailable) {
-          onConnect();
-        } else {
-          setShowWalletOptions(true);
-        }
-      }}
+      onClick={onConnect}
       disabled={isConnecting || !detectionComplete}
       className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium border border-blue-700 disabled:opacity-50 shadow-lg"
     >
