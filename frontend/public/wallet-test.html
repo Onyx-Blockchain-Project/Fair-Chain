@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quick Wallet Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .test-section { background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+        .info { color: #17a2b8; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; border: none; border-radius: 4px; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        input { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 4px; width: 400px; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Quick Wallet Connection Test</h1>
+    
+    <div class="test-section">
+        <h2>📋 Test Factory Registration</h2>
+        <p>This will test the complete factory registration flow with a manual wallet address.</p>
+        
+        <div>
+            <label>Test Wallet Address:</label><br>
+            <input type="text" id="testWallet" value="GAA3KDJIGWT7QI6A7B6NG7KMY3FSJ5AXEOTUQO7QC5WXK2VUTWF2YJ2H" readonly>
+            <button class="btn-primary" onclick="testRegistration()">Test Factory Registration</button>
+        </div>
+        
+        <div id="testResult" style="margin-top: 20px;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔗 Manual Wallet Connection</h2>
+        <p>Test connecting with a manual wallet address:</p>
+        
+        <div>
+            <input type="text" id="manualWallet" placeholder="Enter Stellar address (G...)" value="GAA3KDJIGWT7QI6A7B6NG7KMY3FSJ5AXEOTUQO7QC5WXK2VUTWF2YJ2H">
+            <button class="btn-warning" onclick="testManualConnection()">Test Manual Connection</button>
+        </div>
+        
+        <div id="manualResult" style="margin-top: 20px;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🌐 Quick Links</h2>
+        <button class="btn-success" onclick="window.open('http://localhost:5173', '_blank')">Open Main App</button>
+        <button class="btn-success" onclick="window.open('http://localhost:5173/freighter-debug.html', '_blank')">Open Debug Tool</button>
+        <button class="btn-primary" onclick="window.open('https://www.freighter.app', '_blank')">Download Freighter</button>
+    </div>
+
+    <script>
+        async function testRegistration() {
+            const resultDiv = document.getElementById('testResult');
+            resultDiv.innerHTML = '<div class="info">Testing factory registration...</div>';
+            
+            try {
+                const testData = {
+                    owner: document.getElementById('testWallet').value,
+                    walletAddress: document.getElementById('testWallet').value,
+                    name: 'Test Factory from Quick Test',
+                    location: 'Addis Ababa',
+                    productType: 'coffee',
+                    employeeCount: 25,
+                    latitude: 9.1450,
+                    longitude: 38.7617,
+                };
+                
+                console.log('Sending test data:', testData);
+                
+                const response = await fetch('http://localhost:3001/api/factories/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Factory Registration Successful!</div>
+                        <div><strong>Message:</strong> ${result.message}</div>
+                        <div><strong>Factory ID:</strong> ${result.factory?.id}</div>
+                        <div><strong>Wallet:</strong> ${result.factory?.wallet_address}</div>
+                        <div><strong>Name:</strong> ${result.factory?.name}</div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">❌ Registration Failed</div>
+                        <div><strong>Error:</strong> ${result.message}</div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Test error:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">❌ Network Error</div>
+                    <div><strong>Error:</strong> ${error.message}</div>
+                    <div><strong>Solution:</strong> Make sure backend is running on http://localhost:3001</div>
+                `;
+            }
+        }
+        
+        function testManualConnection() {
+            const resultDiv = document.getElementById('manualResult');
+            const address = document.getElementById('manualWallet').value;
+            
+            if (!address || !address.startsWith('G') || address.length !== 56) {
+                resultDiv.innerHTML = '<div class="error">❌ Invalid Stellar address format</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = `
+                <div class="success">✅ Manual Wallet Connection Test Passed!</div>
+                <div><strong>Wallet Address:</strong> ${address}</div>
+                <div><strong>Status:</strong> Ready for factory registration</div>
+                <div><strong>Next Step:</strong> Go to main app and use Manual button</div>
+            `;
+        }
+        
+        // Auto-test on page load
+        window.onload = function() {
+            console.log('🚀 Quick Wallet Test page loaded');
+            testManualConnection();
+        };
+    </script>
+</body>
+</html>

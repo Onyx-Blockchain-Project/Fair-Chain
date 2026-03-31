@@ -159,7 +159,7 @@ export function useStellarWallet() {
     };
   }, [detectionComplete]);
 
-  // Connect to Freighter (with automatic fallback to manual)
+  // Connect to Freighter
   const connect = useCallback(async () => {
     setIsConnecting(true);
     setError(null);
@@ -176,18 +176,17 @@ export function useStellarWallet() {
       }
       
       if (!freighter) {
-        // AUTOMATIC FALLBACK: Show manual input instead of error
-        console.log('🔄 Freighter not found, falling back to manual input');
-        setIsConnecting(false);
-        // Return a special error that the component can handle
-        throw new Error('MANUAL_FALLBACK_REQUIRED');
+        throw new Error(
+          'Freighter wallet not detected. Please:\n' +
+          '1. Install Freighter from https://www.freighter.app\n' +
+          '2. Enable the extension in your browser\n' +
+          '3. Refresh this page\n' +
+          '4. Try using the Manual button as an alternative'
+        );
       }
       
       if (!testFreighterAPI(freighter)) {
-        // AUTOMATIC FALLBACK: Show manual input instead of error
-        console.log('🔄 Freighter API not functional, falling back to manual input');
-        setIsConnecting(false);
-        throw new Error('MANUAL_FALLBACK_REQUIRED');
+        throw new Error('Freighter extension found but API not available. Try refreshing the page.');
       }
       
       // Try different connection methods
@@ -202,17 +201,17 @@ export function useStellarWallet() {
           const result = await freighter.requestAccess();
           key = result?.address || result?.publicKey;
         } else {
-          throw new Error('MANUAL_FALLBACK_REQUIRED');
+          throw new Error('No connection method available in Freighter API');
         }
       } catch (popupError) {
         if (popupError.message.includes('rejected') || popupError.message.includes('denied')) {
           throw new Error('Connection was rejected. Please try again and approve the connection.');
         }
-        throw new Error('MANUAL_FALLBACK_REQUIRED');
+        throw popupError;
       }
       
       if (!key) {
-        throw new Error('MANUAL_FALLBACK_REQUIRED');
+        throw new Error('No public key returned from wallet');
       }
       
       setPublicKey(key);
@@ -222,14 +221,7 @@ export function useStellarWallet() {
       
     } catch (err) {
       console.error('❌ Connection error:', err);
-      
-      // Special handling for manual fallback
-      if (err.message === 'MANUAL_FALLBACK_REQUIRED') {
-        setError('Please use the Manual button to connect your wallet');
-      } else {
-        setError(err.message || 'Failed to connect wallet');
-      }
-      
+      setError(err.message || 'Failed to connect wallet');
       setIsConnected(false);
     } finally {
       setIsConnecting(false);
@@ -256,66 +248,5 @@ export function useStellarWallet() {
     connect,
     disconnect,
     connectManual
-  };
-}
-
-export function useSoroban() {
-  const [server] = useState(() => new SorobanRpc.Server(RPC_URL));
-
-  const submitTransaction = useCallback(async (contractId, method, params = [], sourceKey) => {
-    try {
-      const account = await server.getAccount(sourceKey);
-      
-      const contract = new SorobanRpc.Contract(contractId);
-      
-      const transaction = new TransactionBuilder(account, {
-        fee: BASE_FEE,
-        networkPassphrase: NETWORK_PASSPHRASE,
-      })
-        .addOperation(contract.call(method, ...params))
-        .setTimeout(30)
-        .build();
-
-      const signedXDR = await freighter.signTransaction(transaction.toXDR(), {
-        networkPassphrase: NETWORK_PASSPHRASE,
-      });
-
-      const signedTransaction = TransactionBuilder.fromXDR(signedXDR, NETWORK_PASSPHRASE);
-      const result = await server.sendTransaction(signedTransaction);
-      
-      return result;
-    } catch (error) {
-      console.error('Transaction error:', error);
-      throw error;
-    }
-  }, [server]);
-
-  const simulateTransaction = useCallback(async (contractId, method, params = []) => {
-    try {
-      const contract = new SorobanRpc.Contract(contractId);
-      
-      const transaction = new TransactionBuilder(
-        { accountId: 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF', sequence: '0' },
-        {
-          fee: BASE_FEE,
-          networkPassphrase: NETWORK_PASSPHRASE,
-        }
-      )
-        .addOperation(contract.call(method, ...params))
-        .setTimeout(0)
-        .build();
-
-      const result = await server.simulateTransaction(transaction);
-      return result;
-    } catch (error) {
-      console.error('Simulation error:', error);
-      throw error;
-    }
-  }, [server]);
-
-  return {
-    server,
-    submitTransaction,
-    simulateTransaction
   };
 }

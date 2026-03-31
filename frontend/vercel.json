@@ -1,7 +1,7 @@
 {
-  "buildCommand": "npm install && npm run build",
+  "buildCommand": "rm -rf node_modules package-lock.json && npm install && npm run build",
   "outputDirectory": "dist",
-  "framework": "vite",
+  "framework": null,
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],
@@ -26,6 +26,7 @@
     "VITE_API_URL": "https://fair-chain.onrender.com/api",
     "VITE_STELLAR_NETWORK": "TESTNET",
     "VITE_HORIZON_URL": "https://horizon-testnet.stellar.org",
-    "VITE_SOROBAN_RPC_URL": "https://soroban-testnet.stellar.org"
+    "VITE_SOROBAN_RPC_URL": "https://soroban-testnet.stellar.org",
+    "NPM_FLAGS": "--legacy-peer-deps"
   }
 }
