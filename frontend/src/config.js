@@ -1,5 +1,5 @@
 // API Configuration
-export const API_URL = 'http://localhost:3001/api';
+export const API_URL = 'https://fair-chain.onrender.com/api';
 
 // Stellar Configuration  
 export const STELLAR_NETWORK = import.meta.env.VITE_STELLAR_NETWORK || 'TESTNET';
