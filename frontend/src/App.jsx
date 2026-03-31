@@ -168,7 +168,6 @@ function App() {
               <WalletConnect 
                 publicKey={publicKey}
                 isConnected={isConnected}
-                isMock={isMock}
                 onConnect={connect}
                 onDisconnect={disconnect}
               />

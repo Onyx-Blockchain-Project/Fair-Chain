@@ -6,7 +6,6 @@ export function WalletConnect({
   isConnected, 
   isConnecting,
   error,
-  isMock,
   onConnect, 
   onDisconnect 
 }) {
@@ -21,11 +20,6 @@ export function WalletConnect({
         <div className="flex items-center gap-2 px-4 py-2 bg-army-100 text-army-800 rounded-lg border border-army-300">
           <CheckCircle size={18} className="text-army-700" />
           <span className="font-medium">{truncateAddress(publicKey)}</span>
-          {isMock && (
-            <span className="text-xs bg-yellow-200 text-yellow-800 px-1.5 py-0.5 rounded">
-              MOCK
-            </span>
-          )}
         </div>
         <button
           onClick={onDisconnect}
@@ -56,7 +50,7 @@ export function WalletConnect({
         ) : (
           <Wallet size={20} />
         )}
-        {isConnecting ? 'Connecting...' : (isMock ? 'Mock Wallet' : 'Connect Wallet')}
+        {isConnecting ? 'Connecting...' : 'Connect Wallet'}
       </button>
     </div>
   );
