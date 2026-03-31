@@ -1,5 +1,6 @@
 // Contract configuration for FairChain frontend
 // These values are loaded from .env file
+import { API_URL } from './config.js';
 
 export const STELLAR_CONFIG = {
   network: import.meta.env.VITE_STELLAR_NETWORK || 'TESTNET',
@@ -17,7 +18,7 @@ export const CONTRACT_IDS = {
 };
 
 export const API_CONFIG = {
-  baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
+  baseUrl: API_URL,
 };
 
 // Verify all contract IDs are present
