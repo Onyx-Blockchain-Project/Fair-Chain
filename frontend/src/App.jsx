@@ -78,41 +78,8 @@ function App() {
 
             <div className="text-center mt-12">
               <h2 className="text-2xl font-bold text-army-700 mb-4">
-                Ready to Get Started?
+                Ethiopia SME Compliance Verification on Stellar
               </h2>
-              <p className="text-army-600 mb-8">
-                Connect your wallet to begin using FairChain
-              </p>
-              <button
-                onClick={() => setShowWalletPage(true)}
-                className="flex items-center gap-2 px-8 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg border-2 border-blue-700 shadow-lg"
-              >
-                <Factory size={24} />
-                Connect Your Wallet
-              </button>
-              <div className="bg-white p-6 rounded-lg shadow-md border-2 border-dark-200">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-3 bg-dark-100 rounded-full">
-                    <Shield className="text-white" size={24} />
-                  </div>
-                  <h3 className="font-semibold text-lg text-dark-100">Auditor Network</h3>
-                </div>
-                <p className="text-dark-200">
-                  Staked auditors verify compliance with 10x cost reduction vs traditional audits
-                </p>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg shadow-md border-2 border-army-200">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-3 bg-army-200 rounded-full">
-                    <Globe className="text-army-800" size={24} />
-                  </div>
-                  <h3 className="font-semibold text-lg text-army-800">Global Buyers</h3>
-                </div>
-                <p className="text-army-600">
-                  Verify Ethiopian suppliers with cryptographically-proven compliance scores
-                </p>
-              </div>
             </div>
           </div>
         );
@@ -178,18 +145,30 @@ function App() {
             </div>
 
             <div className="flex items-center">
-              <WalletConnect 
-                publicKey={publicKey}
-                isConnected={isConnected}
-                isConnecting={isConnecting}
-                error={error}
-                freighterAvailable={freighterAvailable}
-                manualMode={manualMode}
-                detectionComplete={detectionComplete}
-                onConnect={connect}
-                onDisconnect={disconnect}
-                onConnectManual={connectManual}
-              />
+              {!showWalletPage && (
+                <button
+                  onClick={() => setShowWalletPage(true)}
+                  className="flex items-center gap-2 px-6 py-3 bg-olive-700 text-white rounded-lg hover:bg-olive-800 transition-colors font-semibold border border-olive-900 shadow-lg"
+                >
+                  <Factory size={20} />
+                  Connect Wallet
+                </button>
+              )}
+              
+              {showWalletPage && (
+                <WalletConnect 
+                  publicKey={publicKey}
+                  isConnected={isConnected}
+                  isConnecting={isConnecting}
+                  error={error}
+                  freighterAvailable={freighterAvailable}
+                  manualMode={manualMode}
+                  detectionComplete={detectionComplete}
+                  onConnect={connect}
+                  onDisconnect={disconnect}
+                  onConnectManual={connectManual}
+                />
+              )}
             </div>
           </div>
         </div>

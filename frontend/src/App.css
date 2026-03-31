@@ -4,3 +4,20 @@
   padding: 2rem;
   text-align: center;
 }
+
+/* Olive color utilities */
+.bg-olive-50 { background-color: #f6f7e6; }
+.bg-olive-100 { background-color: #e3eac2; }
+.bg-olive-700 { background-color: #68a063; }
+.bg-olive-800 { background-color: #5c8a4f; }
+.bg-olive-900 { background-color: #4a7c59; }
+.text-olive-600 { color: #68a063; }
+.text-olive-800 { color: #5c8a4f; }
+.text-olive-900 { color: #4a7c59; }
+.border-olive-700 { border-color: #68a063; }
+.border-olive-800 { border-color: #5c8a4f; }
+.border-olive-900 { border-color: #4a7c59; }
+.ring-olive-500 { --tw-ring-color: #68a063; }
+.hover\:bg-olive-800:hover { background-color: #5c8a4f; }
+.from-olive-50 { --tw-gradient-from: #f6f7e6; }
+.to-black { --tw-gradient-to: #000000; }

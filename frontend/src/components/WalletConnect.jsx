@@ -58,19 +58,6 @@ export function WalletConnect({
             <Wallet size={20} />
             Create/Install Freighter Wallet
           </button>
-          
-          <div className="text-center text-gray-500 text-sm">or</div>
-          
-          <button
-            onClick={() => {
-              const testAddress = 'GAA3KDJIGWT7QI6A7B6NG7KMY3FSJ5AXEOTUQO7QC5WXK2VUTWF2YJ2H';
-              onConnectManual(testAddress);
-            }}
-            className="w-full flex items-center gap-3 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
-          >
-            <Wallet size={20} />
-            Use Test Wallet (Demo)
-          </button>
         </div>
         
         <button
