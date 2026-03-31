@@ -1,0 +1,16 @@
+[workspace]
+members = [
+    "factory_registry",
+    "auditor_staking",
+    "audit_nft",
+    "reputation_oracle",
+    "rwa_wrapper",
+    "dispute_resolution",
+]
+resolver = "2"
+
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+lto = true
+panic = "abort"
