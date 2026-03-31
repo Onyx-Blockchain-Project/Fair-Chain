@@ -31,7 +31,8 @@ const corsOptions = {
       'http://localhost:3000',
       'https://fairchain-frontend.vercel.app',
       'https://fairchain.vercel.app',
-      'https://fairchain-frontend-git-*.vercel.app', // Preview deployments
+      'https://fair-chain.vercel.app',  // Your actual Vercel URL
+      'https://fairchain-frontend-git-*.vercel.app',
       process.env.FRONTEND_URL
     ].filter(Boolean);
     
