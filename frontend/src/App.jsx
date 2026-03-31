@@ -10,7 +10,7 @@ import { Factory, Shield, Users, Globe, BarChart3 } from 'lucide-react';
 
 function App() {
   const [activeTab, setActiveTab] = useState('home');
-  const { publicKey, isConnected, isMock, connect, disconnect } = useStellarWallet();
+  const { publicKey, isConnected, isConnecting, error, freighterAvailable, connect, disconnect } = useStellarWallet();
 
   const renderContent = () => {
     switch (activeTab) {
@@ -168,6 +168,9 @@ function App() {
               <WalletConnect 
                 publicKey={publicKey}
                 isConnected={isConnected}
+                isConnecting={isConnecting}
+                error={error}
+                freighterAvailable={freighterAvailable}
                 onConnect={connect}
                 onDisconnect={disconnect}
               />

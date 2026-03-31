@@ -1,11 +1,12 @@
 import React from 'react';
-import { Wallet, LogOut, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+import { Wallet, LogOut, CheckCircle, Loader2, AlertCircle, ExternalLink } from 'lucide-react';
 
 export function WalletConnect({ 
   publicKey, 
   isConnected, 
   isConnecting,
   error,
+  freighterAvailable,
   onConnect, 
   onDisconnect 
 }) {
@@ -13,6 +14,22 @@ export function WalletConnect({
     if (!address) return '';
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
+
+  // Show install prompt if Freighter is not available
+  if (!freighterAvailable && !isConnected) {
+    return (
+      <a
+        href="https://www.freighter.app"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-2 px-4 py-2 bg-amber-100 text-amber-800 rounded-lg hover:bg-amber-200 transition-colors border border-amber-300 font-medium"
+      >
+        <Wallet size={20} />
+        <span>Install Freighter</span>
+        <ExternalLink size={16} />
+      </a>
+    );
+  }
 
   if (isConnected && publicKey) {
     return (
@@ -35,9 +52,9 @@ export function WalletConnect({
   return (
     <div className="flex items-center gap-2">
       {error && (
-        <div className="text-red-600 text-sm flex items-center gap-1 mr-2">
+        <div className="text-red-600 text-sm flex items-center gap-1 mr-2 max-w-xs">
           <AlertCircle size={16} />
-          <span className="hidden sm:inline">{error}</span>
+          <span className="hidden sm:inline truncate">{error}</span>
         </div>
       )}
       <button

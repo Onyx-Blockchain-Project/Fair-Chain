@@ -1,17 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 
-// MOCK MODE: Set to true for testing without Freighter extension
-// In mock mode, wallet appears connected with a test address
-const USE_MOCK_WALLET = true; // Toggle this to true for testing
-const MOCK_PUBLIC_KEY = 'GAA3KDJIGWT7QI6A7B6NG7KMY3FSJ5AXEOTUQO7QC5WXK2VUTWF2YJ2H';
+// REAL FREIGHTER WALLET INTEGRATION - NO MOCK MODE
+// Users must have Freighter browser extension installed
+// Get it at: https://www.freighter.app
 
 // Helper to find Freighter API across different browsers
 const getFreighterApi = () => {
-  // Try all possible API names
+  // Try all possible API names - Freighter injects as window.freighterApi
   return window.freighterApi || 
          window.freighter || 
-         window.stellar || 
-         window.wallet;
+         window.stellar;
 };
 
 const isFreighterAvailable = () => {
@@ -28,16 +26,6 @@ export function useStellarWallet() {
 
   // Check if Freighter is available in browser
   useEffect(() => {
-    // MOCK MODE: Skip Freighter detection and use mock wallet
-    if (USE_MOCK_WALLET) {
-      console.log('🧪 MOCK WALLET MODE ENABLED');
-      console.log('Using test address:', MOCK_PUBLIC_KEY);
-      setFreighterAvailable(true);
-      setPublicKey(MOCK_PUBLIC_KEY);
-      setIsConnected(true);
-      return;
-    }
-    
     let attempts = 0;
     const maxAttempts = 30;
     
@@ -57,7 +45,9 @@ export function useStellarWallet() {
                 setPublicKey(key);
                 setIsConnected(true);
                 console.log('✅ Already connected:', key);
-              }).catch(console.error);
+              }).catch(err => {
+                console.log('Not connected yet:', err.message);
+              });
             }
           }).catch(console.error);
         }
@@ -66,13 +56,8 @@ export function useStellarWallet() {
         setTimeout(checkFreighter, 1000);
       } else {
         console.log('❌ Freighter not detected after max attempts');
-        console.log('Available window APIs:', Object.keys(window).filter(k => 
-          k.toLowerCase().includes('freighter') || 
-          k.toLowerCase().includes('stellar') ||
-          k.toLowerCase().includes('wallet')
-        ));
-        // Enable mock mode automatically when Freighter not found
-        console.log('💡 Tip: Set USE_MOCK_WALLET = true for testing without extension');
+        console.log('💡 Please install Freighter from https://www.freighter.app');
+        setError('Freighter wallet not detected. Please install the extension.');
       }
     };
     
@@ -110,22 +95,14 @@ export function useStellarWallet() {
     setError(null);
     
     try {
-      // MOCK MODE: Simulate connection
-      if (USE_MOCK_WALLET) {
-        console.log('🧪 MOCK: Simulating wallet connection...');
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setPublicKey(MOCK_PUBLIC_KEY);
-        setIsConnected(true);
-        console.log('🧪 MOCK: Connected with', MOCK_PUBLIC_KEY);
-        setIsConnecting(false);
-        return;
+      // Check if Freighter is installed
+      if (!isFreighterAvailable()) {
+        throw new Error(
+          'Freighter wallet not detected. Please install the Freighter extension from https://www.freighter.app and refresh the page.'
+        );
       }
       
       const api = getFreighterApi();
-      
-      if (!api) {
-        throw new Error('Freighter wallet not detected. Please install the extension and refresh the page.');
-      }
 
       if (!api.getPublicKey) {
         throw new Error('Freighter API not available. Extension may not be fully loaded.');
@@ -163,7 +140,6 @@ export function useStellarWallet() {
     isConnecting,
     error,
     freighterAvailable,
-    isMock: USE_MOCK_WALLET,
     connect,
     disconnect
   };

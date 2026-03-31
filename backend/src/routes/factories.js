@@ -20,28 +20,43 @@ router.post('/register', async (req, res) => {
       longitude,
     } = req.body;
 
-    // Check if factory with this wallet address already exists
-    const existingFactory = await Factory.findOne({
-      where: { wallet_address: walletAddress }
+    // Use upsert to handle duplicates gracefully
+    const [factory, created] = await Factory.findOrCreate({
+      where: { wallet_address: walletAddress },
+      defaults: {
+        wallet_address: walletAddress,
+        owner_address: owner,
+        name,
+        location,
+        product_type: productType,
+        employee_count: employeeCount,
+        latitude,
+        longitude,
+      }
     });
 
-    if (existingFactory) {
-      return res.status(409).json({
-        success: false,
-        message: 'Factory with this wallet address is already registered',
+    if (!created) {
+      // Factory already exists, update it with new information
+      await factory.update({
+        owner_address: owner,
+        name,
+        location,
+        product_type: productType,
+        employee_count: employeeCount,
+        latitude,
+        longitude,
+      });
+      
+      return res.status(200).json({
+        success: true,
+        factory: {
+          id: factory.id,
+          wallet_address: factory.wallet_address,
+          name: factory.name,
+        },
+        message: 'Factory profile updated successfully',
       });
     }
-
-    const factory = await Factory.create({
-      wallet_address: walletAddress,
-      owner_address: owner,
-      name,
-      location,
-      product_type: productType,
-      employee_count: employeeCount,
-      latitude,
-      longitude,
-    });
 
     res.status(201).json({
       success: true,
@@ -54,6 +69,15 @@ router.post('/register', async (req, res) => {
     });
   } catch (error) {
     console.error('Factory registration error:', error);
+    
+    // Handle unique constraint violation
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(409).json({
+        success: false,
+        message: 'This wallet address is already registered. Try updating your existing factory or use a different wallet.',
+      });
+    }
+    
     res.status(500).json({
       success: false,
       message: error.message,

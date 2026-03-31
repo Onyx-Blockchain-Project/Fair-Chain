@@ -18,6 +18,7 @@ export function FactoryRegistration() {
   
   const [submitted, setSubmitted] = useState(false);
   const [profileNFT, setProfileNFT] = useState(null);
+  const [registrationResult, setRegistrationResult] = useState(null);
 
   const productTypes = [
     { value: 'coffee', label: 'Coffee' },
@@ -65,6 +66,7 @@ export function FactoryRegistration() {
       };
 
       const result = await registerFactory(factoryData);
+      setRegistrationResult(result);
       setProfileNFT(result.profileNFT);
       setSubmitted(true);
     } catch (err) {
@@ -80,10 +82,13 @@ export function FactoryRegistration() {
             <CheckCircle className="text-army-700" size={32} />
           </div>
           <h2 className="text-2xl font-bold text-army-800 mb-2">
-            Factory Registered Successfully!
+            {registrationResult?.message.includes('updated') ? 'Factory Updated Successfully!' : 'Factory Registered Successfully!'}
           </h2>
           <p className="text-army-600 mb-6">
-            Your factory profile has been created on the Stellar blockchain.
+            {registrationResult?.message.includes('updated') 
+              ? 'Your factory profile has been updated on the Stellar blockchain.'
+              : 'Your factory profile has been created on the Stellar blockchain.'
+            }
           </p>
           
           {profileNFT && (
@@ -109,6 +114,7 @@ export function FactoryRegistration() {
           <button
             onClick={() => {
               setSubmitted(false);
+              setRegistrationResult(null);
               setFormData({
                 name: '',
                 location: '',
