@@ -13,7 +13,10 @@ export function WalletConnectionPage({ onConnect, onBack, onConnectManual, isCon
   useEffect(() => {
     if (isConnected) {
       setSuccess('✅ Already connected! Redirecting...');
-      setTimeout(() => onBack(), 1000);
+      const timer = setTimeout(() => {
+        onBack();
+      }, 2000);
+      return () => clearTimeout(timer);
     }
   }, [isConnected, onBack]);
 
@@ -39,7 +42,7 @@ export function WalletConnectionPage({ onConnect, onBack, onConnectManual, isCon
     try {
       await onConnect();
       setSuccess('✅ Wallet connected successfully!');
-      setTimeout(() => onBack(), 1500);
+      // Don't auto-redirect, let user see the success message
     } catch (err) {
       console.error('Freighter connection failed:', err);
       
@@ -77,7 +80,7 @@ export function WalletConnectionPage({ onConnect, onBack, onConnectManual, isCon
     try {
       onConnectManual(manualAddress);
       setSuccess('✅ Wallet connected successfully!');
-      setTimeout(() => onBack(), 1500);
+      // Don't auto-redirect, let user see the success message
     } catch (err) {
       setError('Failed to connect with this address');
     }
@@ -130,9 +133,17 @@ export function WalletConnectionPage({ onConnect, onBack, onConnectManual, isCon
           )}
           
           {success && (
-            <div className="mb-4 p-3 bg-green-900/50 border border-green-700 rounded-lg flex items-center gap-2">
-              <CheckCircle size={20} className="text-green-400" />
-              <span className="text-green-200 text-sm">{success}</span>
+            <div className="mb-4 p-3 bg-green-900/50 border border-green-700 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle size={20} className="text-green-400" />
+                <span className="text-green-200 text-sm">{success}</span>
+              </div>
+              <button
+                onClick={onBack}
+                className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 transition-colors text-sm font-medium"
+              >
+                Continue to App
+              </button>
             </div>
           )}
 
