@@ -20,6 +20,18 @@ router.post('/register', async (req, res) => {
       longitude,
     } = req.body;
 
+    // Check if factory with this wallet address already exists
+    const existingFactory = await Factory.findOne({
+      where: { wallet_address: walletAddress }
+    });
+
+    if (existingFactory) {
+      return res.status(409).json({
+        success: false,
+        message: 'Factory with this wallet address is already registered',
+      });
+    }
+
     const factory = await Factory.create({
       wallet_address: walletAddress,
       owner_address: owner,
