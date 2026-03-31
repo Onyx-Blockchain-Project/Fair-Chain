@@ -23,7 +23,7 @@
     }
   ],
   "env": {
-    "VITE_API_URL": "@api_url",
+    "VITE_API_URL": "https://fair-chain.onrender.com/api",
     "VITE_STELLAR_NETWORK": "TESTNET",
     "VITE_HORIZON_URL": "https://horizon-testnet.stellar.org",
     "VITE_SOROBAN_RPC_URL": "https://soroban-testnet.stellar.org"
