@@ -21,6 +21,7 @@ function App() {
           onConnect={connect}
           onConnectManual={connectManual}
           onBack={() => setShowWalletPage(false)}
+          isConnected={isConnected}
         />
       );
     }
