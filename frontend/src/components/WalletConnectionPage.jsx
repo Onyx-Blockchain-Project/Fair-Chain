@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { Wallet, ArrowLeft, ExternalLink, CheckCircle, Copy, Shield } from 'lucide-react';
+import { Wallet, ArrowLeft, ExternalLink } from 'lucide-react';
 
-export function WalletConnectionPage({ onConnect, onBack }) {
+export function WalletConnectionPage({ onConnect, onBack, onConnectManual }) {
   const [manualAddress, setManualAddress] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   const handleFreighterConnect = async () => {
     setIsConnecting(true);
@@ -25,170 +24,96 @@ export function WalletConnectionPage({ onConnect, onBack }) {
     onConnectManual(manualAddress);
   };
 
-  const copyTestAddress = () => {
-    const testAddress = 'GAA3KDJIGWT7QI6A7B6NG7KMY3FSJ5AXEOTUQO7QC5WXK2VUTWF2YJ2H';
-    navigator.clipboard.writeText(testAddress);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-olive-50 to-black py-12 px-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <button
-            onClick={onBack}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors mb-6"
-          >
-            <ArrowLeft size={20} />
-            Back to App
-          </button>
-          
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-black mb-4">
-              Connect Your Wallet
+    <div className="min-h-screen bg-black py-12 px-4">
+      <div className="max-w-2xl mx-auto">
+        {/* Back Button */}
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-olive-400 hover:text-olive-300 transition-colors mb-8"
+        >
+          <ArrowLeft size={20} />
+          Back
+        </button>
+
+        {/* Main Card */}
+        <div className="bg-gradient-to-b from-olive-800 to-olive-900 rounded-3xl p-8 border border-olive-700 shadow-2xl">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center mx-auto mb-4 border-2 border-olive-500">
+              <Wallet size={32} className="text-olive-400" />
+            </div>
+            <h1 className="text-3xl font-bold text-white mb-2">
+              Connect Wallet
             </h1>
-            <p className="text-lg text-gray-700 max-w-2xl mx-auto">
-              Choose how you'd like to connect your Stellar wallet to FairChain
+            <p className="text-olive-200">
+              Access FairChain with your Stellar wallet
             </p>
           </div>
-        </div>
 
-        {/* Wallet Options */}
-        <div className="grid md:grid-cols-2 gap-8 mb-8">
-          {/* Freighter Option */}
-          <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-olive-100 rounded-full flex items-center justify-center">
-                <Wallet size={24} className="text-olive-600" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-black">Freighter Wallet</h2>
-                <p className="text-gray-600">Most popular Stellar wallet</p>
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              <button
-                onClick={handleFreighterConnect}
-                disabled={isConnecting}
-                className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-olive-700 text-white rounded-xl hover:bg-olive-800 transition-colors font-semibold text-lg disabled:opacity-50 shadow-lg"
-              >
-                {isConnecting ? (
-                  <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <Wallet size={24} />
-                )}
-                {isConnecting ? 'Connecting...' : 'Connect Freighter'}
-              </button>
-              
-              <a
-                href="https://www.freighter.app"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-semibold text-lg border border-gray-300"
-              >
-                <ExternalLink size={20} />
-                Download Freighter
-              </a>
-            </div>
-            
-            <div className="mt-6 p-4 bg-olive-50 rounded-lg">
-              <h3 className="font-semibold text-olive-900 mb-2">Why Freighter?</h3>
-              <ul className="space-y-2 text-sm text-olive-800">
-                <li>• Most trusted Stellar wallet</li>
-                <li>• Easy to use browser extension</li>
-                <li>• Secure key management</li>
-                <li>• One-click transactions</li>
-              </ul>
-            </div>
+          {/* Connect Button */}
+          <button
+            onClick={handleFreighterConnect}
+            disabled={isConnecting}
+            className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-black text-white rounded-xl hover:bg-gray-900 transition-all font-semibold text-lg disabled:opacity-50 border-2 border-olive-500 shadow-lg mb-4"
+          >
+            {isConnecting ? (
+              <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <Wallet size={24} />
+            )}
+            {isConnecting ? 'Connecting...' : 'Connect Freighter'}
+          </button>
+
+          {/* Download Link */}
+          <a
+            href="https://www.freighter.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center justify-center gap-2 px-6 py-3 text-olive-300 hover:text-white transition-colors text-sm"
+          >
+            <ExternalLink size={16} />
+            Don't have Freighter? Install here
+          </a>
+
+          {/* Divider */}
+          <div className="flex items-center gap-4 my-6">
+            <div className="flex-1 h-px bg-olive-700"></div>
+            <span className="text-olive-400 text-sm">or</span>
+            <div className="flex-1 h-px bg-olive-700"></div>
           </div>
 
-          {/* Manual Entry Option */}
-          <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                <Shield size={24} className="text-gray-600" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-black">Manual Entry</h2>
-                <p className="text-gray-600">Enter wallet address directly</p>
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Stellar Wallet Address
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={manualAddress}
-                    onChange={(e) => setManualAddress(e.target.value.toUpperCase())}
-                    placeholder="G..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-olive-500 focus:border-transparent text-lg"
-                  />
-                </div>
-              </div>
-              
-              <button
-                onClick={handleManualConnect}
-                disabled={!manualAddress || manualAddress.length !== 56 || !manualAddress.startsWith('G')}
-                className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-black text-white rounded-xl hover:bg-gray-800 transition-colors font-semibold text-lg disabled:opacity-50 shadow-lg"
-              >
-                <Shield size={24} />
-                Connect Wallet
-              </button>
-            </div>
-            
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <h3 className="font-semibold text-gray-900 mb-2">Manual Entry</h3>
-              <ul className="space-y-2 text-sm text-gray-800">
-                <li>• Use existing wallet address</li>
-                <li>• No extension required</li>
-                <li>• Works with any Stellar wallet</li>
-                <li>• Quick and direct access</li>
-              </ul>
-            </div>
+          {/* Manual Entry */}
+          <div className="space-y-3">
+            <input
+              type="text"
+              value={manualAddress}
+              onChange={(e) => setManualAddress(e.target.value.toUpperCase())}
+              placeholder="Enter wallet address (G...)"
+              className="w-full px-4 py-3 bg-black border border-olive-600 rounded-xl text-white placeholder-olive-500 focus:ring-2 focus:ring-olive-400 focus:border-transparent"
+            />
+            <button
+              onClick={handleManualConnect}
+              disabled={!manualAddress || manualAddress.length !== 56 || !manualAddress.startsWith('G')}
+              className="w-full px-6 py-3 bg-olive-600 text-white rounded-xl hover:bg-olive-500 transition-colors font-medium disabled:opacity-50 border border-olive-500"
+            >
+              Connect with Address
+            </button>
           </div>
         </div>
 
-        {/* Help Section */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-          <h2 className="text-2xl font-bold text-black mb-6">Need Help?</h2>
-          
-          <div className="grid md:grid-cols-3 gap-6">
-            <div>
-              <h3 className="font-semibold text-black mb-3">🔧 Installation Help</h3>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li>• Click puzzle icon in toolbar</li>
-                <li>• Find Freighter extension</li>
-                <li>• Click "Add to browser"</li>
-                <li>• Refresh this page</li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="font-semibold text-black mb-3">🔑 Wallet Creation</h3>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li>• Install Freighter extension</li>
-                <li>• Click extension icon</li>
-                <li>• Choose "Create New Wallet"</li>
-                <li>• Save your secret phrase</li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="font-semibold text-black mb-3">⚡ Quick Start</h3>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li>• Use manual entry option</li>
-                <li>• Enter any Stellar address</li>
-                <li>• Test all features</li>
-                <li>• No installation needed</li>
-              </ul>
-            </div>
+        {/* Features */}
+        <div className="mt-8 grid grid-cols-3 gap-4 text-center">
+          <div className="p-4">
+            <div className="text-olive-400 font-bold text-lg mb-1">Secure</div>
+            <div className="text-gray-500 text-sm">Blockchain verified</div>
+          </div>
+          <div className="p-4">
+            <div className="text-olive-400 font-bold text-lg mb-1">Fast</div>
+            <div className="text-gray-500 text-sm">Instant connection</div>
+          </div>
+          <div className="p-4">
+            <div className="text-olive-400 font-bold text-lg mb-1">Free</div>
+            <div className="text-gray-500 text-sm">No fees to connect</div>
           </div>
         </div>
       </div>
