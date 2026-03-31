@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from 'react';
 // Helper to find Freighter API across different browsers
 const getFreighterApi = () => {
   // Try all possible API names - Freighter injects as window.freighterApi
+  // Also check for window.freighter which is used in older versions
   return window.freighterApi || 
          window.freighter || 
          window.stellar;
@@ -14,7 +15,18 @@ const getFreighterApi = () => {
 
 const isFreighterAvailable = () => {
   const api = getFreighterApi();
-  return !!api && typeof api.getPublicKey === 'function';
+  // Check for either getPublicKey or isConnected (some versions have different APIs)
+  return !!api && (typeof api.getPublicKey === 'function' || typeof api.isConnected === 'function');
+};
+
+// Also check for Albedo (another Stellar wallet) as fallback
+const getAlbedoApi = () => {
+  return window.albedo;
+};
+
+const isAlbedoAvailable = () => {
+  const api = getAlbedoApi();
+  return !!api && typeof api.publicKey === 'function';
 };
 
 export function useStellarWallet() {

@@ -15,22 +15,6 @@ export function WalletConnect({
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
-  // Show install prompt if Freighter is not available
-  if (!freighterAvailable && !isConnected) {
-    return (
-      <a
-        href="https://www.freighter.app"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center gap-2 px-4 py-2 bg-amber-100 text-amber-800 rounded-lg hover:bg-amber-200 transition-colors border border-amber-300 font-medium"
-      >
-        <Wallet size={20} />
-        <span>Install Freighter</span>
-        <ExternalLink size={16} />
-      </a>
-    );
-  }
-
   if (isConnected && publicKey) {
     return (
       <div className="flex items-center gap-3">
@@ -57,18 +41,34 @@ export function WalletConnect({
           <span className="hidden sm:inline truncate">{error}</span>
         </div>
       )}
-      <button
-        onClick={onConnect}
-        disabled={isConnecting}
-        className="flex items-center gap-2 px-4 py-2 bg-army-700 text-white rounded-lg hover:bg-army-800 transition-colors font-medium border border-army-800 disabled:opacity-50"
-      >
-        {isConnecting ? (
-          <Loader2 size={20} className="animate-spin" />
-        ) : (
-          <Wallet size={20} />
+      
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onConnect}
+          disabled={isConnecting}
+          className="flex items-center gap-2 px-4 py-2 bg-army-700 text-white rounded-lg hover:bg-army-800 transition-colors font-medium border border-army-800 disabled:opacity-50"
+        >
+          {isConnecting ? (
+            <Loader2 size={20} className="animate-spin" />
+          ) : (
+            <Wallet size={20} />
+          )}
+          {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+        </button>
+        
+        {!freighterAvailable && (
+          <a
+            href="https://www.freighter.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-amber-600 hover:text-amber-700 underline flex items-center gap-1"
+            title="Get Freighter wallet"
+          >
+            <ExternalLink size={12} />
+            Get Freighter
+          </a>
         )}
-        {isConnecting ? 'Connecting...' : 'Connect Wallet'}
-      </button>
+      </div>
     </div>
   );
 }
