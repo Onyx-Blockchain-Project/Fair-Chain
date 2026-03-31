@@ -1,0 +1,53 @@
+services:
+  - type: web
+    name: fairchain-backend
+    runtime: node
+    region: oregon
+    plan: standard
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: STELLAR_NETWORK
+        value: TESTNET
+      - key: HORIZON_URL
+        value: https://horizon-testnet.stellar.org
+      - key: SOROBAN_RPC_URL
+        value: https://soroban-testnet.stellar.org
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fairchain-db
+          property: connectionString
+      - key: INFURA_PROJECT_ID
+        sync: false
+      - key: INFURA_SECRET
+        sync: false
+      - key: FACTORY_REGISTRY_CONTRACT_ID
+        sync: false
+      - key: AUDITOR_STAKING_CONTRACT_ID
+        sync: false
+      - key: AUDIT_REGISTRY_CONTRACT_ID
+        sync: false
+      - key: REPUTATION_ORACLE_CONTRACT_ID
+        sync: false
+      - key: DISPUTE_RESOLUTION_CONTRACT_ID
+        sync: false
+      - key: TRADE_FINANCE_CONTRACT_ID
+        sync: false
+
+    healthCheckPath: /health
+    autoDeploy: true
+
+databases:
+  - name: fairchain-db
+    databaseName: fairchain
+    user: fairchain
+    plan: starter
+    region: oregon
+    postgresMajorVersion: "15"
