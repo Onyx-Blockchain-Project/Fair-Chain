@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Freighter Detection Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button { padding: 10px 20px; margin: 10px 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Freighter Wallet Detection Test</h1>
+    
+    <div id="status" class="info">Checking for Freighter...</div>
+    
+    <h2>Detection Results:</h2>
+    <div id="results"></div>
+    
+    <h2>Actions:</h2>
+    <button onclick="testConnection()">Test Connection</button>
+    <button onclick="getPublicKey()">Get Public Key</button>
+    <button onclick="refreshPage()">Refresh Page</button>
+    
+    <h2>Manual Checks:</h2>
+    <ul>
+        <li>Open browser extensions (click the puzzle icon)</li>
+        <li>Make sure Freighter is enabled</li>
+        <li>Try disabling and re-enabling Freighter</li>
+        <li>Check if Freighter works on other sites</li>
+    </ul>
+
+    <script>
+        function checkFreighter() {
+            const results = document.getElementById('results');
+            const status = document.getElementById('status');
+            
+            const checks = {
+                'window.freighterApi': !!window.freighterApi,
+                'window.freighter': !!window.freighter,
+                'window.stellar': !!window.stellar,
+                'window.albedo': !!window.albedo
+            };
+            
+            let html = '';
+            for (const [key, value] of Object.entries(checks)) {
+                html += `<div class="${value ? 'success' : 'error'}">${key}: ${value ? '✅ Found' : '❌ Not found'}</div>`;
+            }
+            
+            results.innerHTML = html;
+            
+            const hasFreighter = Object.values(checks).some(v => v);
+            if (hasFreighter) {
+                status.className = 'success';
+                status.textContent = '✅ Freighter detected!';
+            } else {
+                status.className = 'error';
+                status.textContent = '❌ Freighter not detected. Please install the extension.';
+            }
+        }
+        
+        async function testConnection() {
+            try {
+                const api = window.freighterApi || window.freighter || window.stellar;
+                if (!api) throw new Error('No API found');
+                
+                if (api.isConnected) {
+                    const connected = await api.isConnected();
+                    alert('Connected: ' + connected);
+                } else {
+                    alert('isConnected method not available');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        async function getPublicKey() {
+            try {
+                const api = window.freighterApi || window.freighter || window.stellar;
+                if (!api) throw new Error('No API found');
+                
+                if (api.getPublicKey) {
+                    const key = await api.getPublicKey();
+                    alert('Public Key: ' + key);
+                } else {
+                    alert('getPublicKey method not available');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        function refreshPage() {
+            location.reload();
+        }
+        
+        // Check immediately
+        checkFreighter();
+        
+        // Also check after a delay
+        setTimeout(checkFreighter, 2000);
+        setTimeout(checkFreighter, 5000);
+    </script>
+</body>
+</html>

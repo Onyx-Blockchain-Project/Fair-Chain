@@ -19,6 +19,21 @@ const isFreighterAvailable = () => {
   return !!api && (typeof api.getPublicKey === 'function' || typeof api.isConnected === 'function');
 };
 
+// Enhanced detection with more checks
+const detectFreighterExtension = () => {
+  // Check for extension in different ways
+  const checks = [
+    !!window.freighterApi,
+    !!window.freighter,
+    !!window.stellar,
+    !!document.querySelector('#freighter-extension-installed'), // Some versions add this
+    localStorage.getItem('freighter-installed') === 'true'
+  ];
+  
+  console.log('Freighter detection checks:', checks);
+  return checks.some(check => check);
+};
+
 // Also check for Albedo (another Stellar wallet) as fallback
 const getAlbedoApi = () => {
   return window.albedo;
@@ -39,13 +54,21 @@ export function useStellarWallet() {
   // Check if Freighter is available in browser
   useEffect(() => {
     let attempts = 0;
-    const maxAttempts = 30;
+    const maxAttempts = 10; // Reduced from 30 for faster feedback
     
     const checkFreighter = () => {
       attempts++;
       
-      if (isFreighterAvailable()) {
-        console.log('✅ Freighter detected');
+      console.log(`🔍 Freighter check ${attempts}/${maxAttempts}`);
+      console.log('Window objects:', {
+        freighterApi: !!window.freighterApi,
+        freighter: !!window.freighter,
+        stellar: !!window.stellar,
+        albedo: !!window.albedo
+      });
+      
+      if (detectFreighterExtension() || isFreighterAvailable()) {
+        console.log('✅ Freighter detected!');
         setFreighterAvailable(true);
         
         // Check if already connected
@@ -64,17 +87,21 @@ export function useStellarWallet() {
           }).catch(console.error);
         }
       } else if (attempts < maxAttempts) {
-        console.log(`⏳ Freighter check ${attempts}/${maxAttempts}`);
-        setTimeout(checkFreighter, 1000);
+        console.log(`⏳ Waiting for Freighter... (${attempts}/${maxAttempts})`);
+        setTimeout(checkFreighter, 500); // Reduced from 1000ms
       } else {
-        console.log('❌ Freighter not detected after max attempts');
-        console.log('💡 Please install Freighter from https://www.freighter.app');
-        setError('Freighter wallet not detected. Please install the extension.');
+        console.log('❌ Freighter not detected');
+        console.log('💡 Troubleshooting:');
+        console.log('1. Make sure Freighter extension is installed and enabled');
+        console.log('2. Try refreshing the page');
+        console.log('3. Check if extension is disabled in incognito mode');
+        console.log('4. Try a different browser');
+        setError('Freighter wallet not detected. Please install the extension and refresh the page.');
       }
     };
     
-    // Initial check after delay
-    setTimeout(checkFreighter, 500);
+    // Start checking immediately
+    checkFreighter();
   }, []);
 
   useEffect(() => {
