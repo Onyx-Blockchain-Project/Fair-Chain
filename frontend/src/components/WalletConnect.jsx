@@ -20,13 +20,13 @@ export function WalletConnect({
   if (isConnected && publicKey) {
     return (
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-lg border border-green-300">
-          <CheckCircle size={18} className="text-green-700" />
+        <div className="flex items-center gap-2 px-4 py-2 bg-olive-100 text-olive-800 rounded-lg border border-olive-300">
+          <CheckCircle size={18} className="text-olive-700" />
           <span className="font-medium">{truncateAddress(publicKey)}</span>
         </div>
         <button
           onClick={onDisconnect}
-          className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          className="p-2 text-olive-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
           title="Disconnect"
         >
           <LogOut size={20} />

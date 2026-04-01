@@ -146,17 +146,7 @@ function App() {
             </div>
 
             <div className="flex items-center">
-              {!showWalletPage && (
-                <button
-                  onClick={() => setShowWalletPage(true)}
-                  className="flex items-center gap-2 px-6 py-3 bg-olive-700 text-white rounded-lg hover:bg-olive-800 transition-colors font-semibold border border-olive-900 shadow-lg"
-                >
-                  <Factory size={20} />
-                  Connect Wallet
-                </button>
-              )}
-              
-              {showWalletPage && (
+              {isConnected ? (
                 <WalletConnect 
                   publicKey={publicKey}
                   isConnected={isConnected}
@@ -169,6 +159,14 @@ function App() {
                   onDisconnect={disconnect}
                   onConnectManual={connectManual}
                 />
+              ) : (
+                <button
+                  onClick={() => setShowWalletPage(true)}
+                  className="flex items-center gap-2 px-6 py-3 bg-olive-700 text-white rounded-lg hover:bg-olive-800 transition-colors font-semibold border border-olive-900 shadow-lg"
+                >
+                  <Factory size={20} />
+                  Connect Wallet
+                </button>
               )}
             </div>
           </div>
