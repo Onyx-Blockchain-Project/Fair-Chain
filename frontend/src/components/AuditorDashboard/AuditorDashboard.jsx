@@ -18,16 +18,25 @@ import {
   ChevronDown,
   ChevronUp,
   AlertCircle,
-  User
+  User,
+  Search,
+  Copy,
+  Building
 } from 'lucide-react';
 
 export function AuditorDashboard() {
   const { publicKey, isConnected } = useStellarWallet();
-  const { submitAudit, stakeAsAuditor, getAuditorDashboard, loading } = useAPI();
+  const { submitAudit, stakeAsAuditor, getAuditorDashboard, getFactories, loading } = useAPI();
   const { uploadMultipleFiles, uploading: ipfsUploading, error: ipfsError } = useIPFS();
   
   const [activeView, setActiveView] = useState('dashboard');
   const [dashboardData, setDashboardData] = useState(null);
+  const [factories, setFactories] = useState([]);
+  const [filters, setFilters] = useState({
+    productType: '',
+    location: '',
+    minScore: 0,
+  });
   const [files, setFiles] = useState([]);
   const [uploadedHashes, setUploadedHashes] = useState([]);
   const [auditForm, setAuditForm] = useState({
@@ -66,6 +75,27 @@ export function AuditorDashboard() {
       setActiveView('audit');
     }
   }, [dashboardData]);
+
+  useEffect(() => {
+    // Load factories when switching to factories view
+    if (activeView === 'factories') {
+      loadFactories();
+    }
+  }, [activeView]);
+
+  const loadFactories = async () => {
+    try {
+      const data = await getFactories(filters);
+      setFactories(data || []);
+    } catch (err) {
+      console.error('Failed to load factories:', err);
+    }
+  };
+
+  const copyFactoryAddress = (address) => {
+    navigator.clipboard.writeText(address);
+    // You could add a toast notification here
+  };
 
   const loadDashboard = async () => {
     try {
@@ -325,6 +355,123 @@ export function AuditorDashboard() {
     </div>
   );
 
+  const renderFactoriesView = () => (
+    <div className="bg-white rounded-lg shadow-md p-6 border border-army-200">
+      <h3 className="text-xl font-bold text-army-800 mb-4 flex items-center gap-2">
+        <Building size={20} />
+        Find Factories to Audit
+      </h3>
+      
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-army-700 mb-2">
+            Product Type
+          </label>
+          <select
+            value={filters.productType}
+            onChange={(e) => setFilters(prev => ({ ...prev, productType: e.target.value }))}
+            className="w-full px-4 py-2 border border-army-300 rounded-lg focus:ring-2 focus:ring-army-500 focus:border-transparent bg-army-50"
+          >
+            <option value="">All Types</option>
+            <option value="coffee">Coffee</option>
+            <option value="textiles">Textiles</option>
+            <option value="leather">Leather</option>
+            <option value="agriculture">Agriculture</option>
+          </select>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-army-700 mb-2">
+            Location
+          </label>
+          <select
+            value={filters.location}
+            onChange={(e) => setFilters(prev => ({ ...prev, location: e.target.value }))}
+            className="w-full px-4 py-2 border border-army-300 rounded-lg focus:ring-2 focus:ring-army-500 focus:border-transparent bg-army-50"
+          >
+            <option value="">All Regions</option>
+            <option value="Sidama">Sidama</option>
+            <option value="Yirgacheffe">Yirgacheffe</option>
+            <option value="Jimma">Jimma</option>
+            <option value="Harrar">Harrar</option>
+            <option value="Addis Ababa">Addis Ababa</option>
+          </select>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-army-700 mb-2">
+            Min Compliance Score
+          </label>
+          <select
+            value={filters.minScore}
+            onChange={(e) => setFilters(prev => ({ ...prev, minScore: parseInt(e.target.value) }))}
+            className="w-full px-4 py-2 border border-army-300 rounded-lg focus:ring-2 focus:ring-army-500 focus:border-transparent bg-army-50"
+          >
+            <option value="0">All Scores</option>
+            <option value="60">60+ (Junior)</option>
+            <option value="75">75+ (Expert)</option>
+            <option value="90">90+ (Elite)</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {factories.length === 0 ? (
+          <div className="text-center py-8">
+            <Building className="mx-auto mb-4 text-army-300" size={48} />
+            <p className="text-army-500">No factories found matching your criteria.</p>
+          </div>
+        ) : (
+          factories.map((factory) => (
+            <div key={factory.wallet_address} className="border border-army-200 rounded-lg p-4 hover:border-army-400 transition-colors">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <h4 className="font-semibold text-army-800">{factory.name}</h4>
+                  <p className="text-sm text-army-600 flex items-center gap-1">
+                    <MapPin size={14} />
+                    {factory.location}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className="text-lg font-bold text-army-800">{factory.compliance_score}</div>
+                  <div className="text-xs text-army-500">Score</div>
+                </div>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <div className="text-sm text-army-600">
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-army-100 rounded">
+                    <Building size={12} />
+                    {factory.product_type}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => copyFactoryAddress(factory.wallet_address)}
+                    className="flex items-center gap-1 px-3 py-1 text-sm bg-army-700 text-white rounded hover:bg-army-800 transition-colors"
+                  >
+                    <Copy size={14} />
+                    Copy Address
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAuditForm(prev => ({ ...prev, factoryAddress: factory.wallet_address }));
+                      setActiveView('audit');
+                    }}
+                    className="flex items-center gap-1 px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                  >
+                    <FileText size={14} />
+                    Audit This Factory
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+
   const renderAuditView = () => (
     <div className="bg-white rounded-lg shadow-md p-6 border border-army-200">
       <h3 className="text-xl font-bold text-army-800 mb-4">
@@ -498,21 +645,35 @@ export function AuditorDashboard() {
           </button>
         )}
         {dashboardData && (
-          <button
-            onClick={() => setActiveView('audit')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors border-2 ${
-              activeView === 'audit'
-                ? 'bg-army-700 text-white border-army-800'
-                : 'bg-army-50 text-army-700 hover:bg-army-100 border-army-300'
-            }`}
-          >
-            Submit Audit
-          </button>
+          <>
+            <button
+              onClick={() => setActiveView('factories')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors border-2 ${
+                activeView === 'factories'
+                  ? 'bg-army-700 text-white border-army-800'
+                  : 'bg-army-50 text-army-700 hover:bg-army-100 border-army-300'
+              }`}
+            >
+              <Search size={16} className="inline mr-1" />
+              Find Factories
+            </button>
+            <button
+              onClick={() => setActiveView('audit')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors border-2 ${
+                activeView === 'audit'
+                  ? 'bg-army-700 text-white border-army-800'
+                  : 'bg-army-50 text-army-700 hover:bg-army-100 border-army-300'
+              }`}
+            >
+              Submit Audit
+            </button>
+          </>
         )}
       </div>
 
       {activeView === 'dashboard' && renderDashboardView()}
       {activeView === 'stake' && renderStakeView()}
+      {activeView === 'factories' && renderFactoriesView()}
       {activeView === 'audit' && renderAuditView()}
     </div>
   );
