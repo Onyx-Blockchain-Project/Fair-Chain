@@ -16,6 +16,9 @@ const matchingRoutes = require('./routes/matching');
 const metricsRoutes = require('./routes/metrics');
 const ipfsRoutes = require('./routes/ipfs');
 const nftStorageRoutes = require('./routes/nftstorage');
+const contactRoutes = require('./routes/contacts');
+const tradeFinanceRoutes = require('./routes/tradeFinance');
+const disputeRoutes = require('./routes/disputes');
 
 // Associations fixed - using wallet_address as foreign key reference
 const app = express();
@@ -80,6 +83,9 @@ app.use('/api/matching', matchingRoutes);
 app.use('/api/metrics', metricsRoutes);
 app.use('/api/ipfs', ipfsRoutes);
 app.use('/api/nftstorage', nftStorageRoutes);
+app.use('/api/contacts', contactRoutes);
+app.use('/api/trade-finance', tradeFinanceRoutes);
+app.use('/api/disputes', disputeRoutes);
 
 // Root health check for Render
 app.get('/health', (req, res) => {

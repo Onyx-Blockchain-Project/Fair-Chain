@@ -1,23 +1,28 @@
+// Legacy IPFS Service - using Simple IPFS Service instead
+// This file is kept for compatibility but delegates to Simple IPFS Service
+
+const simpleIPFSService = require('./simpleIPFSService');
+
 class IPFSService {
   constructor() {
     this.client = null;
-    console.log('IPFS service disabled - using NFT.Storage instead');
+    console.log('IPFS service delegating to Simple IPFS Service');
   }
 
   async uploadFile(fileBuffer, filename) {
-    throw new Error('IPFS service disabled. Use NFT.Storage endpoint instead: /api/nftstorage/upload');
+    return simpleIPFSService.uploadFile(fileBuffer, filename);
   }
 
   async uploadMultipleFiles(files) {
-    throw new Error('IPFS service disabled. Use NFT.Storage endpoint instead: /api/nftstorage/upload-multiple');
+    return simpleIPFSService.uploadMultipleFiles(files);
   }
 
   getUrl(hash) {
-    return `https://ipfs.io/ipfs/${hash}`;
+    return simpleIPFSService.getUrl(hash);
   }
 
   isAvailable() {
-    return false;
+    return simpleIPFSService.isAvailable();
   }
 }
 

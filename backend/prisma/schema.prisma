@@ -158,6 +158,22 @@ model SDGImpact {
   @@map("sdg_impact")
 }
 
+model ContactRequest {
+  id              String   @id @default(uuid())
+  buyerAddress    String   @map("buyer_address")
+  factoryAddress  String   @map("factory_address")
+  subject         String
+  message         String
+  status          ContactStatus @default(PENDING)
+  buyerEmail      String?  @map("buyer_email")
+  buyerCompany    String?  @map("buyer_company")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  respondedAt     DateTime? @map("responded_at")
+
+  @@map("contact_requests")
+}
+
 // Enums
 enum AuditStatus {
   PENDING
@@ -182,4 +198,10 @@ enum FinanceStatus {
   APPROVED
   RELEASED
   REJECTED
+}
+
+enum ContactStatus {
+  PENDING
+  RESPONDED
+  CLOSED
 }

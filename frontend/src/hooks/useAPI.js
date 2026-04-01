@@ -118,6 +118,66 @@ export function useAPI() {
     }
   }, []);
 
+  const getFactoryDashboard = useCallback(async (factoryAddress) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await api.get(`/factories/dashboard/${factoryAddress}`);
+      return response.data.data;
+    } catch (err) {
+      setError(err.response?.data?.message || err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const createContactRequest = useCallback(async (contactData) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await api.post('/contacts', contactData);
+      return response.data;
+    } catch (err) {
+      setError(err.response?.data?.message || err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const updateContactStatus = useCallback(async (contactId, status) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await api.put(`/contacts/${contactId}`, { status });
+      return response.data;
+    } catch (err) {
+      setError(err.response?.data?.message || err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const getAuditorDashboard = useCallback(async (auditorAddress) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await api.get(`/auditors/dashboard/${auditorAddress}`);
+      return response.data.data;
+    } catch (err) {
+      setError(err.response?.data?.message || err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     loading,
     error,
@@ -128,5 +188,9 @@ export function useAPI() {
     getReputationScore,
     stakeAsAuditor,
     getSDGMetrics,
+    getFactoryDashboard,
+    createContactRequest,
+    updateContactStatus,
+    getAuditorDashboard,
   };
 }

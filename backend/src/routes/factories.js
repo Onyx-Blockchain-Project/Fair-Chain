@@ -1,5 +1,5 @@
 const express = require('express');
-const { Factory, Auditor, Audit, ReputationScore } = require('../models');
+const { Factory, Auditor, Audit, ReputationScore, ContactRequest } = require('../models');
 const matchingService = require('../services/matchingService');
 const stellarService = require('../services/stellarService');
 const ipfsService = require('../services/ipfsService');
@@ -164,6 +164,101 @@ router.get('/:walletAddress', async (req, res) => {
     });
   } catch (error) {
     console.error('Get factory error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+// Get factory dashboard data (for logged-in factory owner)
+router.get('/dashboard/:walletAddress', async (req, res) => {
+  try {
+    const { walletAddress } = req.params;
+
+    const factory = await Factory.findOne({
+      where: { wallet_address: walletAddress },
+      include: [ReputationScore],
+    });
+
+    if (!factory) {
+      return res.status(404).json({
+        success: false,
+        message: 'Factory not found',
+      });
+    }
+
+    // Get all audits for this factory
+    const audits = await Audit.findAll({
+      where: { factory_address: walletAddress },
+      include: [{
+        model: Auditor,
+        attributes: ['name', 'reputation_score', 'wallet_address']
+      }],
+      order: [['submittedAt', 'DESC']],
+    });
+
+    // Get contact requests
+    const contactRequests = await ContactRequest.findAll({
+      where: { factory_address: walletAddress },
+      order: [['createdAt', 'DESC']],
+    });
+
+    // Calculate dashboard stats
+    const pendingContacts = contactRequests.filter(c => c.status === 'PENDING').length;
+    const respondedContacts = contactRequests.filter(c => c.status === 'RESPONDED').length;
+
+    const dashboardData = {
+      factory: {
+        id: factory.id,
+        wallet_address: factory.wallet_address,
+        name: factory.name,
+        location: factory.location,
+        product_type: factory.product_type,
+        employee_count: factory.employee_count,
+        is_active: factory.is_active,
+        registered_at: factory.registered_at,
+      },
+      reputation: factory.ReputationScore || null,
+      audits: audits.map(audit => ({
+        id: audit.id,
+        audit_id_on_chain: audit.audit_id_on_chain,
+        auditor: audit.Auditor,
+        overall_score: audit.overall_score,
+        labor_score: audit.labor_score,
+        environmental_score: audit.environmental_score,
+        quality_score: audit.quality_score,
+        safety_score: audit.safety_score,
+        notes: audit.notes,
+        evidence_urls: audit.evidence_urls,
+        status: audit.status,
+        submitted_at: audit.submittedAt,
+        verified_at: audit.verifiedAt,
+      })),
+      contacts: {
+        total: contactRequests.length,
+        pending: pendingContacts,
+        responded: respondedContacts,
+        recent: contactRequests.slice(0, 5),
+      },
+      stats: {
+        total_audits: audits.length,
+        average_score: audits.length > 0 
+          ? (audits.reduce((sum, a) => sum + a.overall_score, 0) / audits.length).toFixed(2)
+          : 0,
+        latest_audit_date: audits.length > 0 ? audits[0].submittedAt : null,
+        compliance_trend: audits.length > 1 
+          ? audits[0].overall_score - audits[audits.length - 1].overall_score 
+          : 0,
+      },
+    };
+
+    res.json({
+      success: true,
+      data: dashboardData,
+    });
+  } catch (error) {
+    console.error('Get factory dashboard error:', error);
     res.status(500).json({
       success: false,
       message: error.message,

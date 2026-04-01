@@ -2,6 +2,7 @@ const Factory = require('./Factory');
 const Auditor = require('./Auditor');
 const Audit = require('./Audit');
 const ReputationScore = require('./ReputationScore');
+const ContactRequest = require('./ContactRequest');
 
 // Define associations
 Factory.hasOne(ReputationScore, {
@@ -40,4 +41,5 @@ module.exports = {
   Auditor,
   Audit,
   ReputationScore,
+  ContactRequest,
 };

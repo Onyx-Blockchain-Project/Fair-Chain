@@ -10,7 +10,8 @@ export function WalletConnect({
   manualMode,
   detectionComplete,
   onConnect, 
-  onDisconnect
+  onDisconnect,
+  setShowWalletPage
 }) {
   const truncateAddress = (address) => {
     if (!address) return '';
@@ -20,13 +21,17 @@ export function WalletConnect({
   if (isConnected && publicKey) {
     return (
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 px-4 py-2 bg-olive-100 text-olive-800 rounded-lg border border-olive-300">
-          <CheckCircle size={18} className="text-olive-700" />
-          <span className="font-medium">{truncateAddress(publicKey)}</span>
-        </div>
+        <button
+          onClick={() => setShowWalletPage && setShowWalletPage(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-white text-navy-800 rounded-lg border-2 border-navy-700 shadow-lg hover:bg-navy-100 transition-all"
+          title="Click to change wallet"
+        >
+          <CheckCircle size={18} className="text-navy-600" />
+          <span className="font-semibold">{truncateAddress(publicKey)}</span>
+        </button>
         <button
           onClick={onDisconnect}
-          className="p-2 text-olive-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          className="p-2 text-white hover:text-red-400 hover:bg-black rounded-lg transition-all border border-navy-700"
           title="Disconnect"
         >
           <LogOut size={20} />
@@ -39,7 +44,7 @@ export function WalletConnect({
     <button
       onClick={onConnect}
       disabled={isConnecting || !detectionComplete}
-      className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium border border-blue-700 disabled:opacity-50 shadow-lg"
+      className="flex items-center gap-2 px-6 py-3 bg-navy-800 text-white rounded-lg hover:bg-navy-900 transition-all font-semibold border-2 border-white shadow-xl disabled:opacity-50"
     >
       {isConnecting ? (
         <Loader2 size={20} className="animate-spin" />

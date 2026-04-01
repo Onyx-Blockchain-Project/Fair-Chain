@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useStellarWallet } from '../../hooks/useStellarWallet';
 import { useAPI } from '../../hooks/useAPI';
-import { MapPin, Users, Package, CheckCircle, AlertCircle } from 'lucide-react';
+import { useIPFS } from '../../hooks/useIPFS';
+import { useDropzone } from 'react-dropzone';
+import { MapPin, Users, Package, CheckCircle, AlertCircle, Upload, FileText, X } from 'lucide-react';
 
-export function FactoryRegistration() {
+export function FactoryRegistration({ onRegistrationSuccess }) {
   const { publicKey, isConnected } = useStellarWallet();
   const { registerFactory, loading, error } = useAPI();
+  const { uploadMultipleFiles, uploading: ipfsUploading, error: ipfsError } = useIPFS();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -14,11 +17,27 @@ export function FactoryRegistration() {
     employeeCount: '',
     latitude: '',
     longitude: '',
+    certifications: [],
   });
   
   const [submitted, setSubmitted] = useState(false);
   const [profileNFT, setProfileNFT] = useState(null);
   const [registrationResult, setRegistrationResult] = useState(null);
+  const [certificationFiles, setCertificationFiles] = useState([]);
+  const [uploadedCertifications, setUploadedCertifications] = useState([]);
+
+  const onDrop = useCallback((acceptedFiles) => {
+    setCertificationFiles(prev => [...prev, ...acceptedFiles]);
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'application/pdf': ['.pdf'],
+      'image/*': ['.jpeg', '.jpg', '.png'],
+    },
+    maxFiles: 5,
+  });
 
   const productTypes = [
     { value: 'coffee', label: 'Coffee' },
@@ -45,12 +64,35 @@ export function FactoryRegistration() {
     }));
   };
 
+  const handleCertificationUpload = async () => {
+    if (certificationFiles.length === 0) return;
+
+    try {
+      const results = await uploadMultipleFiles(certificationFiles);
+      const hashes = results.map(r => r.hash);
+      setUploadedCertifications(hashes);
+      setFormData(prev => ({
+        ...prev,
+        certifications: hashes
+      }));
+      return results;
+    } catch (err) {
+      console.error('Certification upload failed:', err);
+      return null;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!isConnected || !publicKey) {
       alert('Please connect your wallet first');
       return;
+    }
+
+    // Upload certifications first if files exist
+    if (certificationFiles.length > 0 && uploadedCertifications.length === 0) {
+      await handleCertificationUpload();
     }
 
     try {
@@ -63,12 +105,20 @@ export function FactoryRegistration() {
         employeeCount: parseInt(formData.employeeCount),
         latitude: parseFloat(formData.latitude) || 0,
         longitude: parseFloat(formData.longitude) || 0,
+        certifications: uploadedCertifications,
       };
 
       const result = await registerFactory(factoryData);
       setRegistrationResult(result);
       setProfileNFT(result.profileNFT);
       setSubmitted(true);
+      
+      // Redirect to dashboard after 3 seconds
+      if (onRegistrationSuccess) {
+        setTimeout(() => {
+          onRegistrationSuccess();
+        }, 3000);
+      }
     } catch (err) {
       console.error('Registration failed:', err);
     }
@@ -122,7 +172,10 @@ export function FactoryRegistration() {
                 employeeCount: '',
                 latitude: '',
                 longitude: '',
+                certifications: [],
               });
+              setCertificationFiles([]);
+              setUploadedCertifications([]);
             }}
             className="px-6 py-2 bg-army-700 text-white rounded-lg hover:bg-army-800 transition-colors border border-army-800"
           >
@@ -266,11 +319,76 @@ export function FactoryRegistration() {
             </div>
           </div>
 
+          {/* Certification Upload Section */}
+          <div>
+            <label className="block text-sm font-medium text-army-700 mb-2">
+              <span className="flex items-center gap-2">
+                <FileText size={16} />
+                Certification Documents (Optional)
+              </span>
+            </label>
+            
+            <div
+              {...getRootProps()}
+              className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+                isDragActive ? 'border-army-500 bg-army-50' : 'border-army-300 hover:border-army-500'
+              }`}
+            >
+              <input {...getInputProps()} />
+              <Upload className="mx-auto mb-2 text-army-400" size={32} />
+              <p className="text-sm text-army-600">
+                {isDragActive
+                  ? 'Drop files here...'
+                  : 'Drag & drop certification documents, or click to select'}
+              </p>
+              <p className="text-xs text-army-500 mt-1">
+                Max 5 files (PDF, JPG, PNG) - ISO, Fair Trade, Organic, etc.
+              </p>
+            </div>
+
+            {certificationFiles.length > 0 && (
+              <div className="mt-4">
+                <p className="text-sm font-medium text-army-700 mb-2">
+                  Selected files ({certificationFiles.length}):
+                </p>
+                <div className="space-y-2">
+                  {certificationFiles.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between bg-army-50 px-3 py-2 rounded text-sm border border-army-200">
+                      <span className="truncate text-army-800">{file.name}</span>
+                      <button
+                        onClick={() => setCertificationFiles(prev => prev.filter((_, i) => i !== index))}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                
+                {uploadedCertifications.length > 0 && (
+                  <div className="mt-3 p-3 bg-green-50 rounded border border-green-200">
+                    <p className="text-sm text-green-800">
+                      ✓ {uploadedCertifications.length} certification(s) uploaded to storage
+                    </p>
+                  </div>
+                )}
+
+                {ipfsError && (
+                  <div className="mt-3 p-3 bg-red-50 rounded border border-red-200">
+                    <p className="text-sm text-red-800">
+                      ⚠ Upload Error: {ipfsError}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <button
             type="submit"
-            disabled={loading || !isConnected}
+            disabled={loading || !isConnected || (certificationFiles.length > 0 && uploadedCertifications.length === 0)}
             className={`w-full py-3 rounded-lg font-medium transition-colors border-2 ${
-              loading || !isConnected
+              loading || !isConnected || (certificationFiles.length > 0 && uploadedCertifications.length === 0)
                 ? 'bg-army-100 text-army-400 cursor-not-allowed border-army-200'
                 : 'bg-army-700 text-white hover:bg-army-800 border-army-800'
             }`}

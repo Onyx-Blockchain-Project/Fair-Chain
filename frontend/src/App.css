@@ -5,6 +5,15 @@
   text-align: center;
 }
 
+/* Navy Green color utilities */
+.bg-navy-800 { background-color: #1e3a2f; }
+.bg-navy-900 { background-color: #152819; }
+.text-navy-600 { color: #2d5a47; }
+.text-navy-700 { color: #1e3a2f; }
+.text-navy-800 { color: #0f1f17; }
+.border-navy-700 { border-color: #1e3a2f; }
+.hover\:bg-navy-900:hover { background-color: #152819; }
+
 /* Olive color utilities */
 .bg-olive-50 { background-color: #f6f7e6; }
 .bg-olive-100 { background-color: #e3eac2; }

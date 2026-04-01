@@ -1,18 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import { WalletConnect } from './components/WalletConnect';
 import { WalletConnectionPage } from './components/WalletConnectionPage';
-import { FactoryRegistration } from './components/FactoryForm/FactoryRegistration';
+import { RegistrationPage } from './components/Registration/RegistrationPage';
+import { FactoryDashboard } from './components/FactoryDashboard/FactoryDashboard';
 import { AuditorDashboard } from './components/AuditorDashboard/AuditorDashboard';
 import { BuyerPortal } from './components/BuyerPortal/BuyerPortal';
 import { SDGDashboard } from './components/SDGDashboard/SDGDashboard';
+import { DisputeResolution } from './components/DisputeResolution/DisputeResolution';
 import { useStellarWallet } from './hooks/useStellarWallet';
-import { Factory, Shield, Users, Globe, BarChart3 } from 'lucide-react';
+import { Factory, Shield, Users, Globe, BarChart3, LayoutDashboard, Gavel, UserPlus } from 'lucide-react';
 
 function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [showWalletPage, setShowWalletPage] = useState(false);
   const { publicKey, isConnected, isConnecting, error, freighterAvailable, manualMode, detectionComplete, connect, disconnect, connectManual } = useStellarWallet();
+
+  // Debug wallet state
+  useEffect(() => {
+    console.log('🔍 App wallet state:', { publicKey, isConnected, isConnecting });
+  }, [publicKey, isConnected, isConnecting]);
 
   const renderContent = () => {
     if (showWalletPage) {
@@ -22,19 +29,28 @@ function App() {
           onConnectManual={connectManual}
           onBack={() => setShowWalletPage(false)}
           isConnected={isConnected}
+          publicKey={publicKey}
         />
       );
     }
 
     switch (activeTab) {
-      case 'factory':
-        return <FactoryRegistration />;
+      case 'register':
+        return (
+          <RegistrationPage 
+            onRegistrationComplete={(dashboard) => setActiveTab(dashboard)} 
+          />
+        );
+      case 'factory-dashboard':
+        return <FactoryDashboard />;
       case 'auditor':
         return <AuditorDashboard />;
       case 'buyer':
         return <BuyerPortal />;
       case 'sdg':
         return <SDGDashboard />;
+      case 'disputes':
+        return <DisputeResolution />;
       default:
         return (
           <div className="max-w-4xl mx-auto">
@@ -47,11 +63,18 @@ function App() {
               </p>
               <div className="flex justify-center gap-4 flex-wrap">
                 <button
-                  onClick={() => setActiveTab('factory')}
+                  onClick={() => setActiveTab('register')}
                   className="flex items-center gap-2 px-6 py-3 bg-army-700 text-white rounded-lg hover:bg-army-800 transition-colors border-2 border-army-900"
                 >
-                  <Factory size={20} />
-                  Register Factory
+                  <UserPlus size={20} />
+                  Register
+                </button>
+                <button
+                  onClick={() => setActiveTab('factory-dashboard')}
+                  className="flex items-center gap-2 px-6 py-3 bg-army-600 text-white rounded-lg hover:bg-army-700 transition-colors border-2 border-army-800"
+                >
+                  <LayoutDashboard size={20} />
+                  Factory Dashboard
                 </button>
                 <button
                   onClick={() => setActiveTab('auditor')}
@@ -73,6 +96,13 @@ function App() {
                 >
                   <Globe size={20} />
                   SDG Dashboard
+                </button>
+                <button
+                  onClick={() => setActiveTab('disputes')}
+                  className="flex items-center gap-2 px-6 py-3 bg-dark-200 text-white rounded-lg hover:bg-dark-300 transition-colors border-2 border-dark-400"
+                >
+                  <Gavel size={20} />
+                  Dispute Resolution
                 </button>
               </div>
             </div>
@@ -103,14 +133,14 @@ function App() {
               
               <div className="hidden md:flex items-center gap-4">
                 <button
-                  onClick={() => setActiveTab('factory')}
+                  onClick={() => setActiveTab('register')}
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    activeTab === 'factory' 
+                    activeTab === 'register' 
                       ? 'text-white bg-army-700' 
                       : 'text-army-300 hover:text-white hover:bg-dark-200'
                   }`}
                 >
-                  Factory
+                  Register
                 </button>
                 <button
                   onClick={() => setActiveTab('auditor')}
@@ -142,32 +172,33 @@ function App() {
                 >
                   Impact
                 </button>
+                <button
+                  onClick={() => setActiveTab('disputes')}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === 'disputes' 
+                      ? 'text-white bg-dark-200' 
+                      : 'text-army-300 hover:text-white hover:bg-dark-200'
+                  }`}
+                >
+                  Disputes
+                </button>
               </div>
             </div>
 
             <div className="flex items-center">
-              {isConnected ? (
-                <WalletConnect 
-                  publicKey={publicKey}
-                  isConnected={isConnected}
-                  isConnecting={isConnecting}
-                  error={error}
-                  freighterAvailable={freighterAvailable}
-                  manualMode={manualMode}
-                  detectionComplete={detectionComplete}
-                  onConnect={connect}
-                  onDisconnect={disconnect}
-                  onConnectManual={connectManual}
-                />
-              ) : (
-                <button
-                  onClick={() => setShowWalletPage(true)}
-                  className="flex items-center gap-2 px-6 py-3 bg-olive-700 text-white rounded-lg hover:bg-olive-800 transition-colors font-semibold border border-olive-900 shadow-lg"
-                >
-                  <Factory size={20} />
-                  Connect Wallet
-                </button>
-              )}
+              <WalletConnect 
+                publicKey={publicKey}
+                isConnected={isConnected}
+                isConnecting={isConnecting}
+                error={error}
+                freighterAvailable={freighterAvailable}
+                manualMode={manualMode}
+                detectionComplete={detectionComplete}
+                onConnect={() => setShowWalletPage(true)}
+                onDisconnect={disconnect}
+                onConnectManual={connectManual}
+                setShowWalletPage={setShowWalletPage}
+              />
             </div>
           </div>
         </div>

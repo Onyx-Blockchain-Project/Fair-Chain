@@ -88,6 +88,7 @@ export function useStellarWallet() {
 
   // Save wallet state to localStorage when it changes
   useEffect(() => {
+    console.log('🔍 Saving to localStorage:', { publicKey, isConnected, manualMode });
     if (publicKey && isConnected) {
       localStorage.setItem('wallet_publicKey', publicKey);
       localStorage.setItem('wallet_isConnected', 'true');
@@ -101,6 +102,7 @@ export function useStellarWallet() {
 
   // Manual wallet address input
   const connectManual = useCallback((address) => {
+    console.log('🔗 Manual connection called with:', address);
     if (!address) {
       setError('Wallet address is required');
       return false;
@@ -111,15 +113,24 @@ export function useStellarWallet() {
       return false;
     }
     
-    setPublicKey(address);
-    setIsConnected(true);
-    setManualMode(true);
+    // Clear any previous error
     setError(null);
-    console.log('✅ Manual wallet connected:', address);
+    
+    // Update state
+    setPublicKey(address);
+    setManualMode(true);
+    
+    // Small delay to ensure state updates
+    setTimeout(() => {
+      setIsConnected(true);
+      console.log('✅ Manual wallet connected:', address);
+      console.log('🔍 State after manual connection:', { publicKey: address, isConnected: true, manualMode: true });
+    }, 10);
+    
     return true;
   }, []);
 
-  // Enhanced Freighter detection
+  // Enhanced Freighter detection - run only once on mount
   useEffect(() => {
     let mounted = true;
     
@@ -159,7 +170,6 @@ export function useStellarWallet() {
         } else {
           console.log('❌ Freighter not detected or not functional');
           setFreighterAvailable(false);
-          setDetectionComplete(true);
         }
         
         setDetectionComplete(true);
@@ -168,23 +178,10 @@ export function useStellarWallet() {
     
     detect();
     
-    // Also listen for extension injection
-    const handleExtensionInjection = () => {
-      if (!detectionComplete) {
-        setTimeout(detect, 100);
-      }
-    };
-    
-    // Multiple event listeners for different browsers
-    window.addEventListener('load', handleExtensionInjection);
-    document.addEventListener('DOMContentLoaded', handleExtensionInjection);
-    
     return () => {
       mounted = false;
-      window.removeEventListener('load', handleExtensionInjection);
-      document.removeEventListener('DOMContentLoaded', handleExtensionInjection);
     };
-  }, [detectionComplete]);
+  }, []); // Remove dependency array to run only once
 
   // Connect to Freighter (with automatic fallback to manual)
   const connect = useCallback(async () => {
@@ -203,18 +200,15 @@ export function useStellarWallet() {
       }
       
       if (!freighter) {
-        // AUTOMATIC FALLBACK: Show manual input instead of error
-        console.log('🔄 Freighter not found, falling back to manual input');
-        setIsConnecting(false);
-        // Return a special error that the component can handle
-        throw new Error('MANUAL_FALLBACK_REQUIRED');
+        // Don't fallback automatically - let the user choose
+        console.log('❌ Freighter not detected');
+        throw new Error('Freighter wallet not detected. Please install the Freighter extension.');
       }
       
       if (!testFreighterAPI(freighter)) {
-        // AUTOMATIC FALLBACK: Show manual input instead of error
-        console.log('🔄 Freighter API not functional, falling back to manual input');
-        setIsConnecting(false);
-        throw new Error('MANUAL_FALLBACK_REQUIRED');
+        // Don't fallback automatically - let the user choose
+        console.log('❌ Freighter API not functional');
+        throw new Error('Freighter extension found but API not available. Try refreshing the page.');
       }
       
       // Try different connection methods
@@ -229,34 +223,29 @@ export function useStellarWallet() {
           const result = await freighter.requestAccess();
           key = result?.address || result?.publicKey;
         } else {
-          throw new Error('MANUAL_FALLBACK_REQUIRED');
+          throw new Error('No connection method available in Freighter API');
         }
       } catch (popupError) {
         if (popupError.message.includes('rejected') || popupError.message.includes('denied')) {
           throw new Error('Connection was rejected. Please try again and approve the connection.');
         }
-        throw new Error('MANUAL_FALLBACK_REQUIRED');
+        throw popupError;
       }
       
       if (!key) {
-        throw new Error('MANUAL_FALLBACK_REQUIRED');
+        throw new Error('No public key returned from wallet');
       }
       
       setPublicKey(key);
       setIsConnected(true);
       setManualMode(false);
+      setError(null);
       console.log('✅ Successfully connected to:', key);
+      console.log('🔍 State after connection:', { publicKey: key, isConnected: true });
       
     } catch (err) {
       console.error('❌ Connection error:', err);
-      
-      // Special handling for manual fallback
-      if (err.message === 'MANUAL_FALLBACK_REQUIRED') {
-        setError('Please use the Manual button to connect your wallet');
-      } else {
-        setError(err.message || 'Failed to connect wallet');
-      }
-      
+      setError(err.message || 'Failed to connect wallet');
       setIsConnected(false);
     } finally {
       setIsConnecting(false);

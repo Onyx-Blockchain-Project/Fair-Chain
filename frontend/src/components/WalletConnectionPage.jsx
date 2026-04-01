@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Wallet, ArrowLeft, ExternalLink, AlertCircle, CheckCircle, Loader2, Copy } from 'lucide-react';
 
-export function WalletConnectionPage({ onConnect, onBack, onConnectManual, isConnected }) {
+export function WalletConnectionPage({ onConnect, onBack, onConnectManual, isConnected, publicKey }) {
   const [manualAddress, setManualAddress] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState('');
@@ -11,14 +11,36 @@ export function WalletConnectionPage({ onConnect, onBack, onConnectManual, isCon
 
   // Auto-redirect if already connected
   useEffect(() => {
-    if (isConnected) {
+    console.log('🔍 WalletConnectionPage state check:', { isConnected, publicKey });
+    if (isConnected && publicKey) {
+      console.log('🔄 Should redirect now - connected with key:', publicKey);
       setSuccess('✅ Already connected! Redirecting...');
       const timer = setTimeout(() => {
+        console.log('🔄 Redirecting now...');
+        onBack();
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [isConnected, publicKey, onBack]);
+
+  // Also check for state changes in a separate effect
+  useEffect(() => {
+    if (isConnected && publicKey) {
+      console.log('🔄 State changed to connected, checking redirect...');
+    }
+  }, [isConnected, publicKey]);
+
+  // Auto-redirect after successful connection
+  useEffect(() => {
+    if (success && success.includes('connected successfully')) {
+      console.log('🔄 Success detected, preparing to redirect...');
+      const timer = setTimeout(() => {
+        console.log('🔄 Redirecting now...');
         onBack();
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [isConnected, onBack]);
+  }, [success, onBack]);
 
   // Check for Freighter on mount
   useEffect(() => {
@@ -35,25 +57,28 @@ export function WalletConnectionPage({ onConnect, onBack, onConnectManual, isCon
   }, []);
 
   const handleFreighterConnect = async () => {
+    console.log('🔗 Freighter button clicked');
     setIsConnecting(true);
     setError('');
     setSuccess('');
     
     try {
-      await onConnect();
+      console.log('🔗 Attempting Freighter connection...');
+      const result = await onConnect();
+      console.log('🔗 Connection call completed with result:', result);
       setSuccess('✅ Wallet connected successfully!');
-      // Don't auto-redirect, let user see the success message
+      // Auto-redirect will handle this
     } catch (err) {
-      console.error('Freighter connection failed:', err);
+      console.error('❌ Freighter connection failed:', err);
+      console.log('🔗 Error message:', err.message);
       
-      if (err.message.includes('MANUAL_FALLBACK_REQUIRED')) {
-        setError('Freighter not detected. Please install it or use manual entry below.');
-      } else if (err.message.includes('rejected') || err.message.includes('denied')) {
-        setError('Connection was rejected. Please try again and approve the connection.');
-      } else {
-        setError('Failed to connect. Please try again or use manual entry.');
-      }
+      // Don't set success on ANY error - this was the bug
+      const errorMessage = err.message || 'Failed to connect to Freighter. Please try again or use manual connection.';
+      console.log('🔗 Setting error message:', errorMessage);
+      setError(errorMessage);
+      
     } finally {
+      console.log('🔗 Setting isConnecting to false');
       setIsConnecting(false);
     }
   };
@@ -78,10 +103,17 @@ export function WalletConnectionPage({ onConnect, onBack, onConnectManual, isCon
     }
     
     try {
-      onConnectManual(manualAddress);
-      setSuccess('✅ Wallet connected successfully!');
-      // Don't auto-redirect, let user see the success message
+      console.log('🔗 Attempting manual connection with:', manualAddress);
+      const success = onConnectManual(manualAddress);
+      console.log('🔗 connectManual returned:', success);
+      if (success) {
+        setSuccess('✅ Wallet connected successfully!');
+        console.log('✅ Manual connection completed');
+      } else {
+        setError('Failed to connect with this address');
+      }
     } catch (err) {
+      console.error('❌ Manual connection failed:', err);
       setError('Failed to connect with this address');
     }
   };
@@ -104,22 +136,22 @@ export function WalletConnectionPage({ onConnect, onBack, onConnectManual, isCon
         {/* Back Button */}
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-olive-400 hover:text-olive-300 transition-colors mb-8"
+          className="flex items-center gap-2 text-white hover:text-navy-300 transition-colors mb-8"
         >
           <ArrowLeft size={20} />
           Back
         </button>
 
         {/* Main Card */}
-        <div className="bg-gradient-to-b from-olive-800 to-olive-900 rounded-3xl p-8 border border-olive-700 shadow-2xl">
+        <div className="bg-gradient-to-b from-navy-800 to-black rounded-3xl p-8 border-2 border-white shadow-2xl">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center mx-auto mb-4 border-2 border-olive-500">
-              <Wallet size={32} className="text-olive-400" />
+            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 border-2 border-navy-700">
+              <Wallet size={32} className="text-navy-800" />
             </div>
             <h1 className="text-3xl font-bold text-white mb-2">
               Connect Wallet
             </h1>
-            <p className="text-olive-200">
+            <p className="text-navy-300">
               Access FairChain with your Stellar wallet
             </p>
           </div>
@@ -137,6 +169,9 @@ export function WalletConnectionPage({ onConnect, onBack, onConnectManual, isCon
               <div className="flex items-center gap-2 mb-2">
                 <CheckCircle size={20} className="text-green-400" />
                 <span className="text-green-200 text-sm">{success}</span>
+                {success.includes('connected successfully') && (
+                  <div className="text-green-300 text-xs">Redirecting to homepage...</div>
+                )}
               </div>
               <button
                 onClick={onBack}
@@ -151,7 +186,7 @@ export function WalletConnectionPage({ onConnect, onBack, onConnectManual, isCon
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-3">
               <div className={`w-2 h-2 rounded-full ${freighterDetected ? 'bg-green-400' : 'bg-yellow-400'}`}></div>
-              <span className="text-olive-300 text-sm">
+              <span className="text-navy-300 text-sm">
                 {freighterDetected ? 'Freighter detected' : 'Freighter not detected'}
               </span>
             </div>
@@ -159,7 +194,7 @@ export function WalletConnectionPage({ onConnect, onBack, onConnectManual, isCon
             <button
               onClick={handleFreighterConnect}
               disabled={isConnecting}
-              className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-black text-white rounded-xl hover:bg-gray-900 transition-all font-semibold text-lg disabled:opacity-50 border-2 border-olive-500 shadow-lg"
+              className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white text-navy-800 rounded-xl hover:bg-navy-100 transition-all font-semibold text-lg disabled:opacity-50 border-2 border-navy-700 shadow-lg"
             >
               {isConnecting ? (
                 <Loader2 size={24} className="animate-spin" />
@@ -175,7 +210,7 @@ export function WalletConnectionPage({ onConnect, onBack, onConnectManual, isCon
             <div className="mb-6">
               <button
                 onClick={installFreighter}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 text-olive-300 hover:text-white transition-colors text-sm border border-olive-600 rounded-lg hover:bg-olive-800/30"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 text-navy-300 hover:text-white transition-colors text-sm border border-navy-600 rounded-lg hover:bg-navy-800/30"
               >
                 <ExternalLink size={16} />
                 Install Freighter Extension
@@ -185,14 +220,14 @@ export function WalletConnectionPage({ onConnect, onBack, onConnectManual, isCon
 
           {/* Divider */}
           <div className="flex items-center gap-4 my-6">
-            <div className="flex-1 h-px bg-olive-700"></div>
-            <span className="text-olive-400 text-sm">or</span>
-            <div className="flex-1 h-px bg-olive-700"></div>
+            <div className="flex-1 h-px bg-navy-700"></div>
+            <span className="text-navy-400 text-sm">or</span>
+            <div className="flex-1 h-px bg-navy-700"></div>
           </div>
 
           {/* Manual Entry */}
           <div className="space-y-4">
-            <label className="block text-olive-300 text-sm font-medium mb-2">
+            <label className="block text-navy-300 text-sm font-medium mb-2">
               Enter Wallet Address Manually
             </label>
             
@@ -202,11 +237,11 @@ export function WalletConnectionPage({ onConnect, onBack, onConnectManual, isCon
                 value={manualAddress}
                 onChange={(e) => setManualAddress(e.target.value.toUpperCase())}
                 placeholder="GXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                className="w-full px-4 py-3 bg-black border border-olive-600 rounded-xl text-white placeholder-olive-500 focus:ring-2 focus:ring-olive-400 focus:border-transparent font-mono text-sm"
+                className="w-full px-4 py-3 bg-white border-2 border-navy-700 rounded-xl text-navy-800 placeholder-navy-500 focus:ring-2 focus:ring-navy-400 focus:border-transparent font-mono text-sm"
                 disabled={isConnecting}
               />
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <span className={`text-xs ${manualAddress.length === 56 && manualAddress.startsWith('G') ? 'text-green-400' : 'text-olive-500'}`}>
+                <span className={`text-xs ${manualAddress.length === 56 && manualAddress.startsWith('G') ? 'text-green-400' : 'text-navy-500'}`}>
                   {manualAddress.length}/56
                 </span>
               </div>
@@ -215,14 +250,14 @@ export function WalletConnectionPage({ onConnect, onBack, onConnectManual, isCon
             <button
               onClick={handleManualConnect}
               disabled={!manualAddress || manualAddress.length !== 56 || !manualAddress.startsWith('G') || isConnecting}
-              className="w-full px-6 py-3 bg-olive-600 text-white rounded-xl hover:bg-olive-500 transition-colors font-medium disabled:opacity-50 border border-olive-500 disabled:cursor-not-allowed"
+              className="w-full px-6 py-3 bg-navy-800 text-white rounded-xl hover:bg-navy-900 transition-colors font-medium disabled:opacity-50 border-2 border-white disabled:cursor-not-allowed"
             >
               Connect with Address
             </button>
             
             <button
               onClick={copyTestAddress}
-              className="w-full px-6 py-2 text-olive-400 hover:text-olive-300 transition-colors text-sm flex items-center justify-center gap-2"
+              className="w-full px-6 py-2 text-navy-400 hover:text-navy-300 transition-colors text-sm flex items-center justify-center gap-2"
             >
               <Copy size={16} />
               {copied ? 'Copied!' : 'Use Test Address'}
@@ -232,24 +267,24 @@ export function WalletConnectionPage({ onConnect, onBack, onConnectManual, isCon
 
         {/* Features */}
         <div className="mt-8 grid grid-cols-3 gap-4 text-center">
-          <div className="p-4 bg-olive-900/30 rounded-xl border border-olive-800">
-            <div className="text-olive-400 font-bold text-lg mb-1">Secure</div>
-            <div className="text-gray-500 text-sm">Blockchain verified</div>
+          <div className="p-4 bg-navy-900/30 rounded-xl border border-navy-800">
+            <div className="text-white font-bold text-lg mb-1">Secure</div>
+            <div className="text-navy-400 text-sm">Blockchain verified</div>
           </div>
-          <div className="p-4 bg-olive-900/30 rounded-xl border border-olive-800">
-            <div className="text-olive-400 font-bold text-lg mb-1">Fast</div>
-            <div className="text-gray-500 text-sm">Instant connection</div>
+          <div className="p-4 bg-navy-900/30 rounded-xl border border-navy-800">
+            <div className="text-white font-bold text-lg mb-1">Fast</div>
+            <div className="text-navy-400 text-sm">Instant connection</div>
           </div>
-          <div className="p-4 bg-olive-900/30 rounded-xl border border-olive-800">
-            <div className="text-olive-400 font-bold text-lg mb-1">Free</div>
-            <div className="text-gray-500 text-sm">No fees to connect</div>
+          <div className="p-4 bg-navy-900/30 rounded-xl border border-navy-800">
+            <div className="text-white font-bold text-lg mb-1">Free</div>
+            <div className="text-navy-400 text-sm">No fees to connect</div>
           </div>
         </div>
 
         {/* Help Section */}
-        <div className="mt-8 p-6 bg-olive-900/20 rounded-xl border border-olive-800">
+        <div className="mt-8 p-6 bg-navy-900/20 rounded-xl border border-navy-800">
           <h3 className="text-white font-semibold mb-3">Need Help?</h3>
-          <div className="space-y-2 text-sm text-olive-300">
+          <div className="space-y-2 text-sm text-navy-300">
             <p>• <strong>Freighter:</strong> Install the browser extension, then click "Connect Freighter"</p>
             <p>• <strong>Manual:</strong> Enter any Stellar wallet address (starts with "G", 56 characters)</p>
             <p>• <strong>Test:</strong> Use any Stellar testnet address to try the app</p>

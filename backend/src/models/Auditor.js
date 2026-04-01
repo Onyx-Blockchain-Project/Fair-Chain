@@ -20,6 +20,14 @@ const Auditor = sequelize.define('Auditor', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  name: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   reputation_score: {
     type: DataTypes.INTEGER,
     defaultValue: 100,

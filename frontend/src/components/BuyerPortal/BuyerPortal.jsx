@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAPI } from '../../hooks/useAPI';
-import { Search, Filter, MapPin, Star, ExternalLink, CheckCircle, XCircle } from 'lucide-react';
+import { useStellarWallet } from '../../hooks/useStellarWallet';
+import { Search, Filter, MapPin, Star, ExternalLink, CheckCircle, XCircle, Mail, Send, X } from 'lucide-react';
 
 export function BuyerPortal() {
-  const { getFactories, getReputationScore, loading } = useAPI();
+  const { getFactories, getReputationScore, createContactRequest, loading } = useAPI();
+  const { publicKey, isConnected } = useStellarWallet();
   const [factories, setFactories] = useState([]);
   const [filters, setFilters] = useState({
     productType: '',
@@ -12,6 +14,14 @@ export function BuyerPortal() {
   });
   const [selectedFactory, setSelectedFactory] = useState(null);
   const [reputationData, setReputationData] = useState(null);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [contactForm, setContactForm] = useState({
+    subject: '',
+    message: '',
+    buyerEmail: '',
+    buyerCompany: ''
+  });
+  const [contactStatus, setContactStatus] = useState(null);
 
   useEffect(() => {
     loadFactories();
@@ -28,12 +38,49 @@ export function BuyerPortal() {
 
   const handleViewDetails = async (factory) => {
     setSelectedFactory(factory);
+    setShowContactModal(false);
+    setContactStatus(null);
     try {
       const repData = await getReputationScore(factory.wallet_address);
       setReputationData(repData);
     } catch (err) {
       console.error('Failed to load reputation:', err);
       setReputationData(null);
+    }
+  };
+
+  const handleContactSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!isConnected) {
+      alert('Please connect your wallet first');
+      return;
+    }
+
+    if (!contactForm.subject || !contactForm.message) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      setContactStatus('sending');
+      await createContactRequest({
+        buyerAddress: publicKey,
+        factoryAddress: selectedFactory.wallet_address,
+        subject: contactForm.subject,
+        message: contactForm.message,
+        buyerEmail: contactForm.buyerEmail,
+        buyerCompany: contactForm.buyerCompany
+      });
+      setContactStatus('success');
+      setTimeout(() => {
+        setShowContactModal(false);
+        setContactForm({ subject: '', message: '', buyerEmail: '', buyerCompany: '' });
+        setContactStatus(null);
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to send contact request:', err);
+      setContactStatus('error');
     }
   };
 
@@ -292,9 +339,148 @@ export function BuyerPortal() {
                   )}
                 </div>
 
-                <button className="w-full mt-6 py-3 bg-army-700 text-white rounded-lg hover:bg-army-800 transition-colors font-medium border border-army-800">
+                <button 
+                  onClick={() => setShowContactModal(true)}
+                  className="w-full mt-6 py-3 bg-army-700 text-white rounded-lg hover:bg-army-800 transition-colors font-medium border border-army-800 flex items-center justify-center gap-2"
+                >
+                  <Mail size={18} />
                   Contact Factory
                 </button>
+
+                {/* Contact Modal */}
+                {showContactModal && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+                      <div className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-semibold text-army-800 flex items-center gap-2">
+                            <Mail size={20} />
+                            Contact {selectedFactory.name}
+                          </h3>
+                          <button
+                            onClick={() => setShowContactModal(false)}
+                            className="text-army-400 hover:text-army-600"
+                          >
+                            <X size={24} />
+                          </button>
+                        </div>
+
+                        {!isConnected && (
+                          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <p className="text-sm text-yellow-800">
+                              Please connect your wallet to send a contact request.
+                            </p>
+                          </div>
+                        )}
+
+                        {contactStatus === 'success' && (
+                          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                            <div className="flex items-center gap-2 text-green-800">
+                              <CheckCircle size={20} />
+                              <span className="font-medium">Contact request sent successfully!</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {contactStatus === 'error' && (
+                          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                            <div className="flex items-center gap-2 text-red-800">
+                              <XCircle size={20} />
+                              <span className="font-medium">Failed to send request. Please try again.</span>
+                            </div>
+                          </div>
+                        )}
+
+                        <form onSubmit={handleContactSubmit} className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium text-army-700 mb-1">
+                              Subject *
+                            </label>
+                            <input
+                              type="text"
+                              value={contactForm.subject}
+                              onChange={(e) => setContactForm(prev => ({ ...prev, subject: e.target.value }))}
+                              required
+                              disabled={contactStatus === 'sending' || contactStatus === 'success'}
+                              className="w-full px-3 py-2 border border-army-300 rounded-lg focus:ring-2 focus:ring-army-500 focus:border-transparent bg-army-50"
+                              placeholder="e.g., Coffee Purchase Inquiry"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-army-700 mb-1">
+                              Your Company (Optional)
+                            </label>
+                            <input
+                              type="text"
+                              value={contactForm.buyerCompany}
+                              onChange={(e) => setContactForm(prev => ({ ...prev, buyerCompany: e.target.value }))}
+                              disabled={contactStatus === 'sending' || contactStatus === 'success'}
+                              className="w-full px-3 py-2 border border-army-300 rounded-lg focus:ring-2 focus:ring-army-500 focus:border-transparent bg-army-50"
+                              placeholder="e.g., Global Coffee Imports Ltd"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-army-700 mb-1">
+                              Your Email (Optional)
+                            </label>
+                            <input
+                              type="email"
+                              value={contactForm.buyerEmail}
+                              onChange={(e) => setContactForm(prev => ({ ...prev, buyerEmail: e.target.value }))}
+                              disabled={contactStatus === 'sending' || contactStatus === 'success'}
+                              className="w-full px-3 py-2 border border-army-300 rounded-lg focus:ring-2 focus:ring-army-500 focus:border-transparent bg-army-50"
+                              placeholder="buyer@company.com"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-army-700 mb-1">
+                              Message *
+                            </label>
+                            <textarea
+                              value={contactForm.message}
+                              onChange={(e) => setContactForm(prev => ({ ...prev, message: e.target.value }))}
+                              required
+                              rows={4}
+                              disabled={contactStatus === 'sending' || contactStatus === 'success'}
+                              className="w-full px-3 py-2 border border-army-300 rounded-lg focus:ring-2 focus:ring-army-500 focus:border-transparent bg-army-50 resize-none"
+                              placeholder="Describe your inquiry, order requirements, or questions..."
+                            />
+                          </div>
+
+                          <button
+                            type="submit"
+                            disabled={!isConnected || contactStatus === 'sending' || contactStatus === 'success'}
+                            className="w-full flex items-center justify-center gap-2 py-3 bg-army-700 text-white rounded-lg hover:bg-army-800 transition-colors disabled:bg-army-300 disabled:cursor-not-allowed font-medium"
+                          >
+                            {contactStatus === 'sending' ? (
+                              <>
+                                <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                                Sending...
+                              </>
+                            ) : contactStatus === 'success' ? (
+                              <>
+                                <CheckCircle size={18} />
+                                Sent!
+                              </>
+                            ) : (
+                              <>
+                                <Send size={18} />
+                                Send Contact Request
+                              </>
+                            )}
+                          </button>
+                        </form>
+
+                        <p className="text-xs text-army-500 mt-4 text-center">
+                          Your wallet address will be shared with the factory for verification.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="bg-white rounded-lg shadow-md p-6 text-center sticky top-4 border border-army-200">

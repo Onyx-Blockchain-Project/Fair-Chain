@@ -1,49 +1,48 @@
 import { useState, useCallback } from 'react';
-import { create } from 'ipfs-http-client';
+import axios from 'axios';
 
-// Use Vite's import.meta.env instead of process.env
-const projectId = import.meta.env.VITE_INFURA_PROJECT_ID || '';
-const projectSecret = import.meta.env.VITE_INFURA_SECRET || '';
-
-const IPFS_CONFIG = {
-  url: 'https://ipfs.infura.io:5001',
-  headers: projectId && projectSecret ? {
-    authorization: 'Basic ' + btoa(projectId + ':' + projectSecret),
-  } : undefined,
-};
-
-let ipfsClient = null;
-
-try {
-  ipfsClient = create(IPFS_CONFIG);
-} catch (error) {
-  console.warn('IPFS client initialization failed:', error);
-}
+// Backend API base URL
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 export function useIPFS() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
+  const [lastUpload, setLastUpload] = useState(null);
 
   const uploadFile = useCallback(async (file) => {
-    if (!ipfsClient) {
-      setError('IPFS client not available');
-      return null;
-    }
-
     setUploading(true);
     setError(null);
 
     try {
-      const added = await ipfsClient.add(file);
-      const url = `https://ipfs.io/ipfs/${added.path}`;
+      console.log('Uploading file to NFT.Storage:', file.name, 'Size:', file.size);
       
-      return {
-        hash: added.path,
-        url,
-        size: added.size,
-      };
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await axios.post(`${API_BASE_URL}/api/ipfs/upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data.success) {
+        const result = {
+          hash: response.data.hash,
+          url: response.data.url,
+          metadataUrl: response.data.metadataUrl,
+          size: response.data.size,
+        };
+        
+        console.log('File uploaded successfully to NFT.Storage:', result.hash);
+        setLastUpload(result);
+        return result;
+      } else {
+        throw new Error(response.data.message || 'Upload failed');
+      }
     } catch (err) {
-      setError(err.message || 'Failed to upload to IPFS');
+      console.error('NFT.Storage upload error:', err);
+      const errorMessage = `Failed to upload to NFT.Storage: ${err.response?.data?.message || err.message}`;
+      setError(errorMessage);
       return null;
     } finally {
       setUploading(false);
@@ -51,30 +50,42 @@ export function useIPFS() {
   }, []);
 
   const uploadMultipleFiles = useCallback(async (files) => {
-    if (!ipfsClient) {
-      setError('IPFS client not available');
-      return [];
-    }
-
     setUploading(true);
     setError(null);
 
     try {
-      const results = await Promise.all(
-        files.map(async (file) => {
-          const added = await ipfsClient.add(file);
-          return {
-            hash: added.path,
-            url: `https://ipfs.io/ipfs/${added.path}`,
-            size: added.size,
-            name: file.name,
-          };
-        })
-      );
+      console.log('Uploading multiple files to NFT.Storage:', files.length);
+      
+      const formData = new FormData();
+      files.forEach(file => {
+        formData.append('files', file);
+      });
 
-      return results;
+      const response = await axios.post(`${API_BASE_URL}/api/ipfs/upload-multiple`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data.success) {
+        const results = response.data.uploads.map(upload => ({
+          hash: upload.hash,
+          url: upload.url,
+          metadataUrl: upload.metadataUrl,
+          size: upload.size,
+          name: upload.filename,
+          error: upload.error,
+        }));
+
+        console.log('Multiple files uploaded successfully to NFT.Storage:', results.length);
+        return results.filter(r => !r.error); // Only return successful uploads
+      } else {
+        throw new Error(response.data.message || 'Upload failed');
+      }
     } catch (err) {
-      setError(err.message || 'Failed to upload files to IPFS');
+      console.error('Multiple files upload error:', err);
+      const errorMessage = `Failed to upload files to NFT.Storage: ${err.response?.data?.message || err.message}`;
+      setError(errorMessage);
       return [];
     } finally {
       setUploading(false);
@@ -91,6 +102,7 @@ export function useIPFS() {
     getFileUrl,
     uploading,
     error,
-    isAvailable: !!ipfsClient,
+    lastUpload,
+    isAvailable: true, // Always available when using backend NFT.Storage
   };
 }

@@ -30,24 +30,13 @@ class NFTStorageService {
     try {
       const file = new File([fileBuffer], filename, { type: this.getMimeType(filename) });
       
-      const nft = {
-        image: file,
-        name: metadata.name || filename,
-        description: metadata.description || `FairChain audit evidence: ${filename}`,
-        properties: {
-          platform: 'FairChain',
-          type: 'audit_evidence',
-          timestamp: new Date().toISOString(),
-          ...metadata.properties,
-        },
-      };
-
-      const cid = await this.client.store(nft);
+      // Create a simple blob upload instead of full NFT structure
+      const cid = await this.client.storeBlob(file);
 
       return {
-        hash: cid.ipnft,
-        url: `https://ipfs.io/ipfs/${cid.ipnft}`,
-        metadataUrl: `https://ipfs.io/ipfs/${cid.url}`,
+        hash: cid,
+        url: `https://ipfs.io/ipfs/${cid}`,
+        metadataUrl: `https://ipfs.io/ipfs/${cid}`,
         filename,
         size: fileBuffer.length,
       };
