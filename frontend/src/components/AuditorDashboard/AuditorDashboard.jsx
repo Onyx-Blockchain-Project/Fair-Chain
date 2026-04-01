@@ -45,6 +45,13 @@ export function AuditorDashboard() {
     }
   }, [isConnected, publicKey, activeView]);
 
+  useEffect(() => {
+    // If user has dashboard data (is staked) and is on stake view, redirect to audit
+    if (dashboardData && activeView === 'stake') {
+      setActiveView('audit');
+    }
+  }, [dashboardData, activeView]);
+
   const loadDashboard = async () => {
     try {
       setError(null);
@@ -463,26 +470,30 @@ export function AuditorDashboard() {
         >
           Dashboard
         </button>
-        <button
-          onClick={() => setActiveView('stake')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors border-2 ${
-            activeView === 'stake'
-              ? 'bg-army-700 text-white border-army-800'
-              : 'bg-army-50 text-army-700 hover:bg-army-100 border-army-300'
-          }`}
-        >
-          Stake
-        </button>
-        <button
-          onClick={() => setActiveView('audit')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors border-2 ${
-            activeView === 'audit'
-              ? 'bg-army-700 text-white border-army-800'
-              : 'bg-army-50 text-army-700 hover:bg-army-100 border-army-300'
-          }`}
-        >
-          Submit Audit
-        </button>
+        {!dashboardData && (
+          <button
+            onClick={() => setActiveView('stake')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors border-2 ${
+              activeView === 'stake'
+                ? 'bg-army-700 text-white border-army-800'
+                : 'bg-army-50 text-army-700 hover:bg-army-100 border-army-300'
+            }`}
+          >
+            Stake
+          </button>
+        )}
+        {dashboardData && (
+          <button
+            onClick={() => setActiveView('audit')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors border-2 ${
+              activeView === 'audit'
+                ? 'bg-army-700 text-white border-army-800'
+                : 'bg-army-50 text-army-700 hover:bg-army-100 border-army-300'
+            }`}
+          >
+            Submit Audit
+          </button>
+        )}
       </div>
 
       {activeView === 'dashboard' && renderDashboardView()}
