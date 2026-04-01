@@ -72,6 +72,33 @@ export function useStellarWallet() {
   const [manualMode, setManualMode] = useState(false);
   const [detectionComplete, setDetectionComplete] = useState(false);
 
+  // Load wallet state from localStorage on mount
+  useEffect(() => {
+    const savedPublicKey = localStorage.getItem('wallet_publicKey');
+    const savedIsConnected = localStorage.getItem('wallet_isConnected') === 'true';
+    const savedManualMode = localStorage.getItem('wallet_manualMode') === 'true';
+    
+    if (savedPublicKey && savedIsConnected) {
+      setPublicKey(savedPublicKey);
+      setIsConnected(true);
+      setManualMode(savedManualMode);
+      console.log('✅ Restored wallet connection from localStorage:', savedPublicKey);
+    }
+  }, []);
+
+  // Save wallet state to localStorage when it changes
+  useEffect(() => {
+    if (publicKey && isConnected) {
+      localStorage.setItem('wallet_publicKey', publicKey);
+      localStorage.setItem('wallet_isConnected', 'true');
+      localStorage.setItem('wallet_manualMode', manualMode.toString());
+    } else {
+      localStorage.removeItem('wallet_publicKey');
+      localStorage.removeItem('wallet_isConnected');
+      localStorage.removeItem('wallet_manualMode');
+    }
+  }, [publicKey, isConnected, manualMode]);
+
   // Manual wallet address input
   const connectManual = useCallback((address) => {
     if (!address) {
@@ -242,6 +269,10 @@ export function useStellarWallet() {
     setIsConnected(false);
     setManualMode(false);
     setError(null);
+    // Clear localStorage
+    localStorage.removeItem('wallet_publicKey');
+    localStorage.removeItem('wallet_isConnected');
+    localStorage.removeItem('wallet_manualMode');
     console.log('🔌 Wallet disconnected');
   }, []);
 
