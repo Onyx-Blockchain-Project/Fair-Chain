@@ -40,10 +40,18 @@ export function AuditorDashboard() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Load dashboard data immediately when component mounts
+    if (isConnected && publicKey) {
+      loadDashboard();
+    }
+  }, [isConnected, publicKey]);
+
+  useEffect(() => {
+    // Also load when switching to dashboard view
     if (isConnected && publicKey && activeView === 'dashboard') {
       loadDashboard();
     }
-  }, [isConnected, publicKey, activeView]);
+  }, [activeView]);
 
   useEffect(() => {
     // If user has dashboard data (is staked) and is on stake view, redirect to audit
@@ -51,6 +59,13 @@ export function AuditorDashboard() {
       setActiveView('audit');
     }
   }, [dashboardData, activeView]);
+
+  useEffect(() => {
+    // Set initial view to audit if user is already staked when component loads
+    if (dashboardData && activeView === 'dashboard') {
+      setActiveView('audit');
+    }
+  }, [dashboardData]);
 
   const loadDashboard = async () => {
     try {
