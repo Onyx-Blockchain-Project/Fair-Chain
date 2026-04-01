@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useStellarWallet } from '../../hooks/useStellarWallet';
+import { useWalletContext } from '../../contexts/WalletContext';
 import { useAPI } from '../../hooks/useAPI';
 import { 
   Shield, 
@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 
 export function DisputeResolution() {
-  const { publicKey, isConnected } = useStellarWallet();
+  const { publicKey, isConnected } = useWalletContext();
   const { 
     fileDispute, 
     getDisputes, 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useStellarWallet } from '../../hooks/useStellarWallet';
+import { useWalletContext } from '../../contexts/WalletContext';
 import { useAPI } from '../../hooks/useAPI';
 import { 
   DollarSign, 
@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 export function LoanStatus() {
-  const { publicKey, isConnected } = useStellarWallet();
+  const { publicKey, isConnected } = useWalletContext();
   const { getFactoryLoans, repayLoan, loading } = useAPI();
   
   const [loans, setLoans] = useState([]);

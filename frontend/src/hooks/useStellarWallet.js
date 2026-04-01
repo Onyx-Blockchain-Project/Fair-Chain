@@ -130,11 +130,18 @@ export function useStellarWallet() {
     return true;
   }, []);
 
-  // Enhanced Freighter detection - run only once on mount
+  // Enhanced Freighter detection - run only once on mount and only if not in manual mode
   useEffect(() => {
     let mounted = true;
     
     const detect = async () => {
+      // Skip detection if already in manual mode
+      if (manualMode) {
+        console.log('🔧 Skipping Freighter detection - manual mode active');
+        setDetectionComplete(true);
+        return;
+      }
+      
       console.log('🔍 Starting comprehensive Freighter detection...');
       
       // Try immediate detection
@@ -181,7 +188,7 @@ export function useStellarWallet() {
     return () => {
       mounted = false;
     };
-  }, []); // Remove dependency array to run only once
+  }, [manualMode]); // Add manualMode to dependencies
 
   // Connect to Freighter (with automatic fallback to manual)
   const connect = useCallback(async () => {

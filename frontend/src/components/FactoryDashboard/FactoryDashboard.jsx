@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useStellarWallet } from '../../hooks/useStellarWallet';
+import { useWalletContext } from '../../contexts/WalletContext';
 import { useAPI } from '../../hooks/useAPI';
 import { TradeFinanceApplication } from '../TradeFinance/TradeFinanceApplication';
 import { LoanStatus } from '../TradeFinance/LoanStatus';
@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 
 export function FactoryDashboard() {
-  const { publicKey, isConnected } = useStellarWallet();
+  const { publicKey, isConnected } = useWalletContext();
   const { getFactoryDashboard, updateContactStatus, loading } = useAPI();
   
   const [dashboardData, setDashboardData] = useState(null);
@@ -33,6 +33,7 @@ export function FactoryDashboard() {
   const [selectedContact, setSelectedContact] = useState(null);
   const [error, setError] = useState(null);
   const [tradeFinanceView, setTradeFinanceView] = useState('status'); // 'status' or 'application'
+  const [isRetrying, setIsRetrying] = useState(false);
 
   useEffect(() => {
     if (isConnected && publicKey) {
@@ -40,13 +41,28 @@ export function FactoryDashboard() {
     }
   }, [isConnected, publicKey]);
 
-  const loadDashboard = async () => {
+  const loadDashboard = async (retryCount = 0) => {
     try {
       setError(null);
+      if (retryCount > 0) {
+        setIsRetrying(true);
+      }
       const data = await getFactoryDashboard(publicKey);
       setDashboardData(data);
+      setIsRetrying(false);
     } catch (err) {
       console.error('Failed to load dashboard:', err);
+      
+      // If factory not found and we haven't retried yet, wait and retry
+      if (err.response?.status === 404 && retryCount < 3) {
+        console.log(`Factory not found, retrying in 2 seconds... (${retryCount + 1}/3)`);
+        setTimeout(() => {
+          loadDashboard(retryCount + 1);
+        }, 2000);
+        return;
+      }
+      
+      setIsRetrying(false);
       setError('Failed to load dashboard data. Please try again.');
     }
   };
@@ -99,6 +115,18 @@ export function FactoryDashboard() {
     );
   }
 
+  if (isRetrying) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white rounded-lg shadow-md p-8 text-center border border-army-200">
+          <div className="animate-spin w-8 h-8 border-4 border-army-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-army-600">Setting up your factory dashboard...</p>
+          <p className="text-sm text-army-500 mt-2">This may take a few moments after registration.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="max-w-4xl mx-auto">
@@ -106,10 +134,16 @@ export function FactoryDashboard() {
           <AlertCircle className="mx-auto mb-4 text-red-500" size={48} />
           <p className="text-red-600 mb-4">{error}</p>
           <button
-            onClick={loadDashboard}
-            className="px-4 py-2 bg-army-700 text-white rounded-lg hover:bg-army-800"
+            onClick={() => loadDashboard()}
+            className="px-4 py-2 bg-army-700 text-white rounded-lg hover:bg-army-800 mr-2"
           >
             Retry
+          </button>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+          >
+            Refresh Page
           </button>
         </div>
       </div>

@@ -178,7 +178,7 @@ router.get('/dashboard/:walletAddress', async (req, res) => {
 
     const factory = await Factory.findOne({
       where: { wallet_address: walletAddress },
-      include: [ReputationScore],
+      include: [{ model: ReputationScore, as: 'ReputationScore' }],
     });
 
     if (!factory) {
@@ -195,7 +195,7 @@ router.get('/dashboard/:walletAddress', async (req, res) => {
         model: Auditor,
         attributes: ['name', 'reputation_score', 'wallet_address']
       }],
-      order: [['submittedAt', 'DESC']],
+      order: [['created_at', 'DESC']],
     });
 
     // Get contact requests
@@ -222,18 +222,18 @@ router.get('/dashboard/:walletAddress', async (req, res) => {
       reputation: factory.ReputationScore || null,
       audits: audits.map(audit => ({
         id: audit.id,
-        audit_id_on_chain: audit.audit_id_on_chain,
+        audit_id_on_chain: audit.token_id,
         auditor: audit.Auditor,
-        overall_score: audit.overall_score,
-        labor_score: audit.labor_score,
-        environmental_score: audit.environmental_score,
-        quality_score: audit.quality_score,
-        safety_score: audit.safety_score,
-        notes: audit.notes,
-        evidence_urls: audit.evidence_urls,
-        status: audit.status,
-        submitted_at: audit.submittedAt,
-        verified_at: audit.verifiedAt,
+        overall_score: audit.score_delta + 50, // Convert from delta to absolute score
+        labor_score: audit.score_delta + 50, // Simplified - in real app would have separate scores
+        environmental_score: audit.score_delta + 50,
+        quality_score: audit.score_delta + 50,
+        safety_score: audit.score_delta + 50,
+        notes: audit.geolocation || 'No notes provided',
+        evidence_urls: audit.ipfs_hashes,
+        status: audit.is_active ? 'VERIFIED' : 'PENDING',
+        submitted_at: audit.created_at,
+        verified_at: audit.updated_at,
       })),
       contacts: {
         total: contactRequests.length,
@@ -244,19 +244,16 @@ router.get('/dashboard/:walletAddress', async (req, res) => {
       stats: {
         total_audits: audits.length,
         average_score: audits.length > 0 
-          ? (audits.reduce((sum, a) => sum + a.overall_score, 0) / audits.length).toFixed(2)
+          ? (audits.reduce((sum, a) => sum + (a.score_delta + 50), 0) / audits.length).toFixed(2)
           : 0,
-        latest_audit_date: audits.length > 0 ? audits[0].submittedAt : null,
+        latest_audit_date: audits.length > 0 ? audits[0].created_at : null,
         compliance_trend: audits.length > 1 
-          ? audits[0].overall_score - audits[audits.length - 1].overall_score 
+          ? (audits[0].score_delta + 50) - (audits[audits.length - 1].score_delta + 50)
           : 0,
       },
     };
 
-    res.json({
-      success: true,
-      data: dashboardData,
-    });
+    res.json(dashboardData);
   } catch (error) {
     console.error('Get factory dashboard error:', error);
     res.status(500).json({

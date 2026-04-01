@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useStellarWallet } from '../../hooks/useStellarWallet';
+import { useWalletContext } from '../../contexts/WalletContext';
 import { useAPI } from '../../hooks/useAPI';
 import { Shield, Coins, CheckCircle, AlertCircle, Star, MapPin } from 'lucide-react';
 
 export function AuditorRegistration({ onRegistrationSuccess }) {
-  const { publicKey, isConnected } = useStellarWallet();
+  const { publicKey, isConnected } = useWalletContext();
   const { stakeAsAuditor, loading } = useAPI();
   
   const [step, setStep] = useState(1);

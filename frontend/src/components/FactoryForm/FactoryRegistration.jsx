@@ -1,12 +1,12 @@
 import React, { useState, useCallback } from 'react';
-import { useStellarWallet } from '../../hooks/useStellarWallet';
+import { useWalletContext } from '../../contexts/WalletContext';
 import { useAPI } from '../../hooks/useAPI';
 import { useIPFS } from '../../hooks/useIPFS';
 import { useDropzone } from 'react-dropzone';
 import { MapPin, Users, Package, CheckCircle, AlertCircle, Upload, FileText, X } from 'lucide-react';
 
 export function FactoryRegistration({ onRegistrationSuccess }) {
-  const { publicKey, isConnected } = useStellarWallet();
+  const { publicKey, isConnected } = useWalletContext();
   const { registerFactory, loading, error } = useAPI();
   const { uploadMultipleFiles, uploading: ipfsUploading, error: ipfsError } = useIPFS();
   

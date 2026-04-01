@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useStellarWallet } from '../../hooks/useStellarWallet';
+import { useWalletContext } from '../../contexts/WalletContext';
 import { useAPI } from '../../hooks/useAPI';
 import { useIPFS } from '../../hooks/useIPFS';
 import { 
@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 export function TradeFinanceApplication() {
-  const { publicKey, isConnected } = useStellarWallet();
+  const { publicKey, isConnected } = useWalletContext();
   const { requestLoan, getFactoryReputation, loading } = useAPI();
   const { uploadFile, uploading: ipfsUploading } = useIPFS();
   

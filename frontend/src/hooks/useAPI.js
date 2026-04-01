@@ -124,7 +124,7 @@ export function useAPI() {
     
     try {
       const response = await api.get(`/factories/dashboard/${factoryAddress}`);
-      return response.data.data;
+      return response.data;
     } catch (err) {
       setError(err.response?.data?.message || err.message);
       throw err;
@@ -169,7 +169,7 @@ export function useAPI() {
     
     try {
       const response = await api.get(`/auditors/dashboard/${auditorAddress}`);
-      return response.data.data;
+      return response.data;
     } catch (err) {
       setError(err.response?.data?.message || err.message);
       throw err;

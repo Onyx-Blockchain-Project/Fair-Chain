@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAPI } from '../../hooks/useAPI';
-import { useStellarWallet } from '../../hooks/useStellarWallet';
+import { useWalletContext } from '../../contexts/WalletContext';
 import { Search, Filter, MapPin, Star, ExternalLink, CheckCircle, XCircle, Mail, Send, X } from 'lucide-react';
 
 export function BuyerPortal() {
   const { getFactories, getReputationScore, createContactRequest, loading } = useAPI();
-  const { publicKey, isConnected } = useStellarWallet();
+  const { publicKey, isConnected } = useWalletContext();
   const [factories, setFactories] = useState([]);
   const [filters, setFilters] = useState({
     productType: '',

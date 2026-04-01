@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useStellarWallet } from '../../hooks/useStellarWallet';
+import { useWalletContext } from '../../contexts/WalletContext';
 import { Users, CheckCircle, AlertCircle, Building2, Mail, User } from 'lucide-react';
 
 export function BuyerRegistration({ onRegistrationSuccess }) {
-  const { publicKey, isConnected } = useStellarWallet();
+  const { publicKey, isConnected } = useWalletContext();
   const [formData, setFormData] = useState({
     companyName: '',
     contactName: '',

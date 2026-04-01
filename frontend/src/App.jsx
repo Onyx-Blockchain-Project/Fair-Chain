@@ -8,13 +8,13 @@ import { AuditorDashboard } from './components/AuditorDashboard/AuditorDashboard
 import { BuyerPortal } from './components/BuyerPortal/BuyerPortal';
 import { SDGDashboard } from './components/SDGDashboard/SDGDashboard';
 import { DisputeResolution } from './components/DisputeResolution/DisputeResolution';
-import { useStellarWallet } from './hooks/useStellarWallet';
+import { WalletProvider, useWalletContext } from './contexts/WalletContext';
 import { Factory, Shield, Users, Globe, BarChart3, LayoutDashboard, Gavel, UserPlus } from 'lucide-react';
 
 function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [showWalletPage, setShowWalletPage] = useState(false);
-  const { publicKey, isConnected, isConnecting, error, freighterAvailable, manualMode, detectionComplete, connect, disconnect, connectManual } = useStellarWallet();
+  const { publicKey, isConnected, isConnecting, error, freighterAvailable, manualMode, detectionComplete, connect, disconnect, connectManual } = useWalletContext();
 
   // Debug wallet state
   useEffect(() => {
@@ -213,4 +213,12 @@ function App() {
   );
 }
 
-export default App;
+function AppWithProvider() {
+  return (
+    <WalletProvider>
+      <App />
+    </WalletProvider>
+  );
+}
+
+export default AppWithProvider;

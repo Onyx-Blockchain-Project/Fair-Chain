@@ -8,6 +8,13 @@ router.post('/stake', async (req, res) => {
   try {
     const { auditor, amount, geoRegion } = req.body;
 
+    if (!auditor || !amount || !geoRegion) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields: auditor, amount, geoRegion',
+      });
+    }
+
     const existingAuditor = await Auditor.findOne({
       where: { wallet_address: auditor },
     });
@@ -140,16 +147,16 @@ router.get('/dashboard/:walletAddress', async (req, res) => {
         model: Factory,
         attributes: ['name', 'location', 'product_type']
       }],
-      order: [['submittedAt', 'DESC']],
+      order: [['created_at', 'DESC']],
     });
 
     // Calculate stats
     const totalAudits = audits.length;
     const averageScore = totalAudits > 0 
-      ? (audits.reduce((sum, a) => sum + a.overall_score, 0) / totalAudits).toFixed(2)
+      ? (audits.reduce((sum, a) => sum + (a.score_delta + 50), 0) / totalAudits).toFixed(2)
       : 0;
-    const verifiedAudits = audits.filter(a => a.status === 'VERIFIED').length;
-    const pendingAudits = audits.filter(a => a.status === 'PENDING').length;
+    const verifiedAudits = audits.filter(a => a.is_active).length;
+    const pendingAudits = audits.filter(a => !a.is_active).length;
 
     // Calculate earnings (simplified: 10 XLM per audit)
     const estimatedEarnings = totalAudits * 10;
@@ -169,18 +176,18 @@ router.get('/dashboard/:walletAddress', async (req, res) => {
       },
       audits: audits.map(audit => ({
         id: audit.id,
-        audit_id_on_chain: audit.audit_id_on_chain,
+        audit_id_on_chain: audit.token_id,
         factory: audit.Factory,
-        overall_score: audit.overall_score,
-        labor_score: audit.labor_score,
-        environmental_score: audit.environmental_score,
-        quality_score: audit.quality_score,
-        safety_score: audit.safety_score,
-        notes: audit.notes,
-        status: audit.status,
-        submitted_at: audit.submittedAt,
-        verified_at: audit.verifiedAt,
-        evidence_count: audit.evidence_urls ? audit.evidence_urls.length : 0,
+        overall_score: audit.score_delta + 50, // Convert from delta to absolute score
+        labor_score: audit.score_delta + 50, // Simplified - in real app would have separate scores
+        environmental_score: audit.score_delta + 50,
+        quality_score: audit.score_delta + 50,
+        safety_score: audit.score_delta + 50,
+        notes: audit.geolocation || 'No notes provided',
+        status: audit.is_active ? 'VERIFIED' : 'PENDING',
+        submitted_at: audit.created_at,
+        verified_at: audit.updated_at,
+        evidence_count: audit.ipfs_hashes ? audit.ipfs_hashes.length : 0,
       })),
       stats: {
         total_audits: totalAudits,
